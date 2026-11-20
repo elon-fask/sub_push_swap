@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>42 push_swap Visualizer (Up to n = 1000+)</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-hover: #334155;
+    --border: #334155;
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --primary: #38bdf8;
+    --primary-dark: #0284c7;
+    --accent: #a855f7;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .badge {
+    background: var(--primary-dark);
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  .container {
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    flex: 1;
+  }
+
+  .controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .card-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .algo-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  button {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  button:hover:not(:disabled) {
+    background: var(--surface-hover);
+    border-color: var(--primary);
+  }
+
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  button.active {
+    background: var(--primary-dark);
+    border-color: var(--primary);
+    color: white;
+    font-weight: 600;
+  }
+
+  button.primary-btn {
+    background: var(--primary-dark);
+    border-color: var(--primary);
+    color: white;
+  }
+
+  button.primary-btn:hover:not(:disabled) {
+    background: var(--primary);
+    color: #0f172a;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  input[type="number"], input[type="text"], select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  input[type="number"] {
+    width: 90px;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .playback-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .slider-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    flex: 1;
+    min-width: 180px;
+  }
+
+  input[type="range"] {
+    flex: 1;
+    accent-color: var(--primary);
+    cursor: pointer;
+  }
+
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.65rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+  }
+
+  .benchmark-pass { color: var(--success); }
+  .benchmark-warn { color: var(--warning); }
+  .benchmark-fail { color: var(--danger); }
+
+  .stacks-workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    min-height: 360px;
+  }
+
+  @media (max-width: 768px) {
+    .stacks-workspace {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .stack-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stack-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stack-title {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .stack-count {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background: var(--bg);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+  }
+
+  .canvas-wrapper {
+    flex: 1;
+    position: relative;
+    min-height: 320px;
+    background: var(--bg);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .trace-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1rem;
+  }
+
+  .trace-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .trace-window {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    max-height: 110px;
+    overflow-y: auto;
+    background: var(--bg);
+    padding: 0.65rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+  }
+
+  .op-chip {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.78rem;
+    padding: 0.2rem 0.45rem;
+    border-radius: 0.35rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .op-chip:hover {
+    border-color: var(--primary);
+    color: var(--text);
+  }
+
+  .op-chip.current {
+    background: var(--primary);
+    color: #0f172a;
+    font-weight: 700;
+    border-color: var(--primary);
+  }
+
+  .error-msg {
+    color: var(--danger);
+    font-size: 0.8rem;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>42 push_swap Visualizer <span class="badge">High-Capacity Mode (n = 3 to 1000+)</span></h1>
+  <div class="input-row">
+    <button id="exportOpsBtn" title="Copy generated instructions to clipboard">Copy Operations</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="controls-grid">
+    <!-- Algorithm Selection -->
+    <div class="card">
+      <div class="card-title">1. Sorting Algorithm</div>
+      <div class="algo-buttons">
+        <button class="algo-btn active" data-algo="turk">Turk (Cost-Based)</button>
+        <button class="algo-btn" data-algo="chunk">Chunking (Butterfly)</button>
+        <button class="algo-btn" data-algo="radix">Radix (LSD Bitwise)</button>
+        <button class="algo-btn" data-algo="insertion">Insertion (Min-Push)</button>
+      </div>
+      <div id="algoNote" style="font-size: 0.8rem; color: var(--text-muted);">
+        Calculates exact rotation costs &amp; uses combined rr/rrr moves. Best for 42 grading limits.
+      </div>
+    </div>
+
+    <!-- Dataset Generator -->
+    <div class="card">
+      <div class="card-title">2. Stack Size &amp; Input</div>
+      <div class="input-row">
+        <label for="sizeInput" style="font-size: 0.85rem; color: var(--text-muted);">Size (n):</label>
+        <input type="number" id="sizeInput" value="100" min="3" max="2000">
+        <button id="preset8">8</button>
+        <button id="preset100">100</button>
+        <button id="preset500">500</button>
+        <button id="preset750">750</button>
+        <button id="shuffleBtn" class="primary-btn">Generate</button>
+      </div>
+      <div class="input-row">
+        <input type="text" id="customInput" placeholder="Or paste space-separated numbers...">
+        <button id="loadCustomBtn">Load</button>
+      </div>
+      <div id="errorMsg" class="error-msg">Invalid input: enter at least 3 unique integers.</div>
+    </div>
+
+    <!-- Playback Controls -->
+    <div class="card">
+      <div class="card-title">3. Playback &amp; Speed</div>
+      <div class="playback-controls">
+        <button id="resetBtn" title="Jump to start">|&lt;</button>
+        <button id="prevBtn" title="Previous step">&lt;</button>
+        <button id="playBtn" class="primary-btn" style="min-width: 75px;">Play</button>
+        <button id="nextBtn" title="Next step">&gt;</button>
+        <button id="endBtn" title="Jump to end">&gt;|</button>
+      </div>
+      <div class="slider-group">
+        <span>Step:</span>
+        <input type="range" id="stepSlider" min="0" max="0" value="0">
+      </div>
+      <div class="slider-group">
+        <span>Speed:</span>
+        <input type="range" id="speedSlider" min="1" max="100" value="50">
+        <span id="speedLabel" style="min-width: 65px; text-align: right;">1x</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats & Benchmarks -->
+  <div class="stats-bar">
+    <div class="stat-box">
+      <div class="stat-label">Current Step</div>
+      <div class="stat-value"><span id="currentStepDisp">0</span> / <span id="totalStepsDisp">0</span></div>
+      <div class="stat-sub" id="lastOpDisp">Last op: none</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Elements (n)</div>
+      <div class="stat-value" id="nDisp">100</div>
+      <div class="stat-sub" id="sortedStatusDisp">Unsorted</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">42 Project Benchmark</div>
+      <div class="stat-value" id="benchmarkDisp">PASS</div>
+      <div class="stat-sub" id="benchmarkNote">Target for n=100: &lt; 700 ops</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Comparison (Total Moves)</div>
+      <div style="font-size: 0.78rem; line-height: 1.4; margin-top: 0.15rem;" id="compareBox">
+        Calculating...
+      </div>
+    </div>
+  </div>
+
+  <!-- Visual Stacks -->
+  <div class="stacks-workspace">
+    <div class="stack-panel">
+      <div class="stack-header">
+        <span class="stack-title">Stack A (Top at top)</span>
+        <span class="stack-count" id="countA">100 items</span>
+      </div>
+      <div class="canvas-wrapper">
+        <canvas id="canvasA"></canvas>
+      </div>
+    </div>
+    <div class="stack-panel">
+      <div class="stack-header">
+        <span class="stack-title">Stack B (Top at top)</span>
+        <span class="stack-count" id="countB">0 items</span>
+      </div>
+      <div class="canvas-wrapper">
+        <canvas id="canvasB"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Operation Trace Window -->
+  <div class="trace-panel">
+    <div class="trace-header">
+      <span class="card-title">Instruction Trace (Windowed around active step for high n)</span>
+      <span style="font-size: 0.8rem; color: var(--text-muted);" id="traceRangeDisp">Showing ops 1 - 150</span>
+    </div>
+    <div class="trace-window" id="traceWindow"></div>
+  </div>
+</div>
+
+<script>
+  // State Management
+  let initialArray = [];
+  let currentAlgo = 'turk';
+  let operations = [];
+  let currentStep = 0;
+  let isPlaying = false;
+  let animFrameId = null;
+  let lastFrameTime = 0;
+
+  // Snapshot caching for fast scrubbing on large n (e.g. n = 500..2000)
+  const SNAPSHOT_INTERVAL = 250;
+  let snapshots = []; // stores { step, a: Int32Array, b: Int32Array }
+  let activeA = [];
+  let activeB = [];
+  let activeStepCache = 0;
+
+  // DOM Elements
+  const sizeInput = document.getElementById('sizeInput');
+  const customInput = document.getElementById('customInput');
+  const errorMsg = document.getElementById('errorMsg');
+  const stepSlider = document.getElementById('stepSlider');
+  const speedSlider = document.getElementById('speedSlider');
+  const speedLabel = document.getElementById('speedLabel');
+  const playBtn = document.getElementById('playBtn');
+  const canvasA = document.getElementById('canvasA');
+  const canvasB = document.getElementById('canvasB');
+  const ctxA = canvasA.getContext('2d');
+  const ctxB = canvasB.getContext('2d');
+
+  // --- Core push_swap Primitive Operations ---
+  function applyOp(a, b, op) {
+    switch (op) {
+      case 'sa':
+        if (a.length >= 2) { const t = a[0]; a[0] = a[1]; a[1] = t; }
+        break;
+      case 'sb':
+        if (b.length >= 2) { const t = b[0]; b[0] = b[1]; b[1] = t; }
+        break;
+      case 'ss':
+        if (a.length >= 2) { const t = a[0]; a[0] = a[1]; a[1] = t; }
+        if (b.length >= 2) { const t = b[0]; b[0] = b[1]; b[1] = t; }
+        break;
+      case 'pa':
+        if (b.length > 0) a.unshift(b.shift());
+        break;
+      case 'pb':
+        if (a.length > 0) b.unshift(a.shift());
+        break;
+      case 'ra':
+        if (a.length >= 2) a.push(a.shift());
+        break;
+      case 'rb':
+        if (b.length >= 2) b.push(b.shift());
+        break;
+      case 'rr':
+        if (a.length >= 2) a.push(a.shift());
+        if (b.length >= 2) b.push(b.shift());
+        break;
+      case 'rra':
+        if (a.length >= 2) a.unshift(a.pop());
+        break;
+      case 'rrb':
+        if (b.length >= 2) b.unshift(b.pop());
+        break;
+      case 'rrr':
+        if (a.length >= 2) a.unshift(a.pop());
+        if (b.length >= 2) b.unshift(b.pop());
+        break;
+    }
+  }
+
+  // Normalize array into ranks 0 .. n-1 for clean algorithm execution and color mapping
+  function normalizeRanks(arr) {
+    const sorted = [...arr].sort((x, y) => x - y);
+    const map = new Map();
+    sorted.forEach((val, idx) => map.set(val, idx));
+    return arr.map(val => map.get(val));
+  }
+
+  // --- 1. TURK ALGORITHM (Cost-Based Greedy Sort) ---
+  function solveTurk(inputArr) {
+    const ops = [];
+    const a = normalizeRanks(inputArr);
+    const b = [];
+    const exec = (op) => { applyOp(a, b, op); ops.push(op); };
+
+    const isSorted = (arr) => {
+      for (let i = 0; i < arr.length - 1; i++) {
+        if (arr[i] > arr[i + 1]) return false;
+      }
+      return true;
+    };
+
+    if (isSorted(a) || a.length <= 1) return ops;
+
+    const sortThree = () => {
+      if (a.length !== 3) return;
+      const maxVal = Math.max(a[0], a[1], a[2]);
+      if (a[0] === maxVal) exec('ra');
+      else if (a[1] === maxVal) exec('rra');
+      if (a[0] > a[1]) exec('sa');
+    };
+
+    if (a.length === 2) {
+      if (a[0] > a[1]) exec('sa');
+      return ops;
+    }
+    if (a.length === 3) {
+      sortThree();
+      return ops;
+    }
+
+    // Push first 2 elements to B
+    if (a.length > 3 && !isSorted(a)) exec('pb');
+    if (a.length > 3 && !isSorted(a)) exec('pb');
+
+    // Push from A to B keeping B descending
+    while (a.length > 3 && !isSorted(a)) {
+      let bestCost = Infinity;
+      let bestMove = null;
+
+      // Precompute max and min in B
+      let maxB = -Infinity, minB = Infinity, maxBIdx = 0;
+      for (let j = 0; j < b.length; j++) {
+        if (b[j] > maxB) { maxB = b[j]; maxBIdx = j; }
+        if (b[j] < minB) { minB = b[j]; }
+      }
+
+      const lenA = a.length;
+      const lenB = b.length;
+
+      for (let i = 0; i < lenA; i++) {
+        const val = a[i];
+        // Find target in B: closest smaller number, or maxB if val < minB
+        let targetIdx = maxBIdx;
+        if (val > minB) {
+          let closestSmaller = -Infinity;
+          for (let j = 0; j < lenB; j++) {
+            if (b[j] < val && b[j] > closestSmaller) {
+              closestSmaller = b[j];
+              targetIdx = j;
+            }
+          }
+        }
+
+        // Evaluate all 4 rotation combinations to find minimum cost
+        const ra = i, rra = (lenA - i) % lenA;
+        const rb = targetIdx, rrb = (lenB - targetIdx) % lenB;
+
+        const cRR = Math.max(ra, rb);
+        const cRRR = Math.max(rra, rrb);
+        const cRA_RRB = ra + rrb;
+        const cRRA_RB = rra + rb;
+
+        const minC = Math.min(cRR, cRRR, cRA_RRB, cRRA_RB);
+        if (minC < bestCost) {
+          bestCost = minC;
+          if (minC === cRR) bestMove = { type: 'rr', aCount: ra, bCount: rb };
+          else if (minC === cRRR) bestMove = { type: 'rrr', aCount: rra, bCount: rrb };
+          else if (minC === cRA_RRB) bestMove = { type: 'ra_rrb', aCount: ra, bCount: rrb };
+          else bestMove = { type: 'rra_rb', aCount: rra, bCount: rb };
+          if (bestCost === 0) break;
+        }
+      }
+
+      // Execute best move
+      if (bestMove.type === 'rr') {
+        const both = Math.min(bestMove.aCount, bestMove.bCount);
+        for (let k = 0; k < both; k++) exec('rr');
+        for (let k = 0; k < bestMove.aCount - both; k++) exec('ra');
+        for (let k = 0; k < bestMove.bCount - both; k++) exec('rb');
+      } else if (bestMove.type === 'rrr') {
+        const both = Math.min(bestMove.aCount, bestMove.bCount);
+        for (let k = 0; k < both; k++) exec('rrr');
+        for (let k = 0; k < bestMove.aCount - both; k++) exec('rra');
+        for (let k = 0; k < bestMove.bCount - both; k++) exec('rrb');
+      } else if (bestMove.type === 'ra_rrb') {
+        for (let k = 0; k < bestMove.aCount; k++) exec('ra');
+        for (let k = 0; k < bestMove.bCount; k++) exec('rrb');
+      } else {
+        for (let k = 0; k < bestMove.aCount; k++) exec('rra');
+        for (let k = 0; k < bestMove.bCount; k++) exec('rb');
+      }
+      exec('pb');
+    }
+
+    sortThree();
+
+    // Push back from B to A
+    while (b.length > 0) {
+      const val = b[0];
+      let minA = Infinity, maxA = -Infinity, minAIdx = 0;
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] < minA) { minA = a[i]; minAIdx = i; }
+        if (a[i] > maxA) { maxA = a[i]; }
+      }
+
+      let targetIdx = minAIdx;
+      if (val < maxA) {
+        let closestLarger = Infinity;
+        for (let i = 0; i < a.length; i++) {
+          if (a[i] > val && a[i] < closestLarger) {
+            closestLarger = a[i];
+            targetIdx = i;
+          }
+        }
+      }
+
+      if (targetIdx <= a.length / 2) {
+        for (let k = 0; k < targetIdx; k++) exec('ra');
+      } else {
+        for (let k = 0; k < a.length - targetIdx; k++) exec('rra');
+      }
+      exec('pa');
+    }
+
+    // Final alignment: bring 0 to top of A
+    const zeroIdx = a.indexOf(0);
+    if (zeroIdx <= a.length / 2) {
+      for (let k = 0; k < zeroIdx; k++) exec('ra');
+    } else {
+      for (let k = 0; k < a.length - zeroIdx; k++) exec('rra');
+    }
+
+    return ops;
+  }
+
+  // --- 2. CHUNKING / BUTTERFLY SORT ---
+  function solveChunk(inputArr) {
+    const ops = [];
+    const a = normalizeRanks(inputArr);
+    const b = [];
+    const n = a.length;
+    const exec = (op) => { applyOp(a, b, op); ops.push(op); };
+
+    // Optimal chunk window scales with n (~15 for 100, ~35 for 500)
+    const range = Math.max(2, Math.floor(Math.sqrt(n) * 1.45));
+    let i = 0;
+
+    while (a.length > 0) {
+      if (a[0] <= i) {
+        exec('pb');
+        exec('rb');
+        i++;
+      } else if (a[0] <= i + range) {
+        exec('pb');
+        i++;
+      } else {
+        exec('ra');
+      }
+    }
+
+    // Pull max elements back from B to A
+    while (b.length > 0) {
+      let maxVal = -1, maxIdx = 0;
+      for (let j = 0; j < b.length; j++) {
+        if (b[j] > maxVal) { maxVal = b[j]; maxIdx = j; }
+      }
+      if (maxIdx <= b.length / 2) {
+        for (let k = 0; k < maxIdx; k++) exec('rb');
+      } else {
+        for (let k = 0; k < b.length - maxIdx; k++) exec('rrb');
+      }
+      exec('pa');
+    }
+
+    return ops;
+  }
+
+  // --- 3. RADIX SORT (LSD Binary) ---
+  function solveRadix(inputArr) {
+    const ops = [];
+    const a = normalizeRanks(inputArr);
+    const b = [];
+    const n = a.length;
+    const exec = (op) => { applyOp(a, b, op); ops.push(op); };
+
+    const isSorted = (arr) => {
+      for (let i = 0; i < arr.length - 1; i++) {
+        if (arr[i] > arr[i + 1]) return false;
+      }
+      return true;
+    };
+
+    if (isSorted(a)) return ops;
+
+    let maxBits = 0;
+    while (((n - 1) >> maxBits) !== 0) maxBits++;
+
+    for (let bit = 0; bit < maxBits; bit++) {
+      if (isSorted(a) && b.length === 0) break;
+      const size = a.length;
+      for (let i = 0; i < size; i++) {
+        if (((a[0] >> bit) & 1) === 1) {
+          exec('ra');
+        } else {
+          exec('pb');
+        }
+      }
+      while (b.length > 0) {
+        exec('pa');
+      }
+    }
+    return ops;
+  }
+
+  // --- 4. INSERTION SORT (Selection Min-Push) ---
+  function solveInsertion(inputArr) {
+    const ops = [];
+    const a = normalizeRanks(inputArr);
+    const b = [];
+    const exec = (op) => { applyOp(a, b, op); ops.push(op); };
+
+    const isSorted = (arr) => {
+      for (let i = 0; i < arr.length - 1; i++) {
+        if (arr[i] > arr[i + 1]) return false;
+      }
+      return true;
+    };
+
+    if (isSorted(a)) return ops;
+
+    while (a.length > 3 && !isSorted(a)) {
+      let minVal = Infinity, minIdx = 0;
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] < minVal) { minVal = a[i]; minIdx = i; }
+      }
+      if (minIdx <= a.length / 2) {
+        for (let k = 0; k < minIdx; k++) exec('ra');
+      } else {
+        for (let k = 0; k < a.length - minIdx; k++) exec('rra');
+      }
+      exec('pb');
+    }
+
+    if (a.length === 3) {
+      const maxVal = Math.max(a[0], a[1], a[2]);
+      if (a[0] === maxVal) exec('ra');
+      else if (a[1] === maxVal) exec('rra');
+      if (a[0] > a[1]) exec('sa');
+    } else if (a.length === 2 && a[0] > a[1]) {
+      exec('sa');
+    }
+
+    while (b.length > 0) {
+      exec('pa');
+    }
+
+    return ops;
+  }
+
+  // --- Snapshot Indexing & State Retrieval ---
+  function buildSnapshots() {
+    snapshots = [];
+    const a = [...initialArray];
+    const b = [];
+    snapshots.push({ step: 0, a: [...a], b: [...b] });
+
+    for (let i = 0; i < operations.length; i++) {
+      applyOp(a, b, operations[i]);
+      if ((i + 1) % SNAPSHOT_INTERVAL === 0) {
+        snapshots.push({ step: i + 1, a: [...a], b: [...b] });
+      }
+    }
+    activeA = [...initialArray];
+    activeB = [];
+    activeStepCache = 0;
+  }
+
+  function seekToStep(targetStep) {
+    targetStep = Math.max(0, Math.min(operations.length, targetStep));
+    if (targetStep === activeStepCache) return;
+
+    // If moving forward slightly from activeStepCache, just step forward
+    if (targetStep > activeStepCache && targetStep - activeStepCache < SNAPSHOT_INTERVAL) {
+      for (let s = activeStepCache; s < targetStep; s++) {
+        applyOp(activeA, activeB, operations[s]);
+      }
+      activeStepCache = targetStep;
+      return;
+    }
+
+    // Otherwise find closest preceding snapshot
+    const snapIdx = Math.floor(targetStep / SNAPSHOT_INTERVAL);
+    const snap = snapshots[snapIdx];
+    activeA = [...snap.a];
+    activeB = [...snap.b];
+    for (let s = snap.step; s < targetStep; s++) {
+      applyOp(activeA, activeB, operations[s]);
+    }
+    activeStepCache = targetStep;
+  }
+
+  // --- High-Performance Canvas Rendering ---
+  function getBarColor(rank, total) {
+    const ratio = total <= 1 ? 0.5 : rank / (total - 1);
+    const hue = Math.round(200 + ratio * 140); // Cyan (200) -> Purple -> Pink/Red (340)
+    return `hsl(${hue}, 82%, 58%)`;
+  }
+
+  function renderStackCanvas(canvas, ctx, stackArr, rankMap, totalN) {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    if (canvas.width !== Math.floor(rect.width * dpr) || canvas.height !== Math.floor(rect.height * dpr)) {
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+    }
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    const w = rect.width;
+    const h = rect.height;
+
+    ctx.clearRect(0, 0, w, h);
+
+    if (stackArr.length === 0) {
+      ctx.fillStyle = '#475569';
+      ctx.font = '14px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Empty Stack', w / 2, h / 2);
+      ctx.restore();
+      return;
+    }
+
+    const padX = 12;
+    const padY = 10;
+    const drawW = w - padX * 2;
+    const drawH = h - padY * 2;
+
+    // Scale slot height based on totalN so bar thickness stays consistent across both stacks
+    const slotH = drawH / totalN;
+    const gap = slotH > 4 ? 1 : 0;
+    const barH = Math.max(1, slotH - gap);
+
+    const showLabels = totalN <= 28 && slotH >= 13;
+    ctx.font = '600 11px ui-monospace, monospace';
+    ctx.textBaseline = 'middle';
+
+    for (let i = 0; i < stackArr.length; i++) {
+      const val = stackArr[i];
+      const rank = rankMap.get(val);
+      const widthRatio = totalN <= 1 ? 1 : 0.08 + 0.92 * ((rank + 1) / totalN);
+      const barW = Math.max(3, drawW * widthRatio);
+      const y = padY + i * slotH;
+
+      ctx.fillStyle = getBarColor(rank, totalN);
+      ctx.fillRect(padX, y, barW, barH);
+
+      if (showLabels) {
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillText(String(val), padX + barW + 6, y + barH / 2);
+      }
+    }
+
+    ctx.restore();
+  }
+
+  let rankLookup = new Map();
+
+  function updateUI() {
+    seekToStep(currentStep);
+
+    document.getElementById('currentStepDisp').textContent = currentStep;
+    document.getElementById('totalStepsDisp').textContent = operations.length;
+    document.getElementById('lastOpDisp').textContent =
+      currentStep === 0 ? 'Last op: none' : `Last op: ${operations[currentStep - 1]}`;
+    document.getElementById('countA').textContent = `${activeA.length} items`;
+    document.getElementById('countB').textContent = `${activeB.length} items`;
+    stepSlider.value = currentStep;
+
+    // Check if sorted at current step
+    let sorted = activeB.length === 0 && activeA.length === initialArray.length;
+    if (sorted) {
+      for (let i = 0; i < activeA.length - 1; i++) {
+        if (activeA[i] > activeA[i + 1]) { sorted = false; break; }
+      }
+    }
+    const statusEl = document.getElementById('sortedStatusDisp');
+    statusEl.textContent = sorted ? 'Sorted (Valid)' : 'In Progress';
+    statusEl.style.color = sorted ? 'var(--success)' : 'var(--text-muted)';
+
+    renderStackCanvas(canvasA, ctxA, activeA, rankLookup, initialArray.length);
+    renderStackCanvas(canvasB, ctxB, activeB, rankLookup, initialArray.length);
+    renderTraceWindow();
+  }
+
+  function renderTraceWindow() {
+    const traceWindow = document.getElementById('traceWindow');
+    const total = operations.length;
+    if (total === 0) {
+      traceWindow.innerHTML = '<span style="color: var(--text-muted); font-size: 0.8rem;">Already sorted (0 operations).</span>';
+      document.getElementById('traceRangeDisp').textContent = '0 ops';
+      return;
+    }
+
+    const windowSize = 140;
+    let start = Math.max(0, currentStep - Math.floor(windowSize / 2));
+    let end = Math.min(total, start + windowSize);
+    if (end - start < windowSize) {
+      start = Math.max(0, end - windowSize);
+    }
+
+    document.getElementById('traceRangeDisp').textContent = `Showing ops ${start + 1} - ${end} of ${total}`;
+
+    const frag = document.createDocumentFragment();
+    for (let i = start; i < end; i++) {
+      const chip = document.createElement('span');
+      chip.className = 'op-chip' + (i + 1 === currentStep ? ' current' : '');
+      chip.textContent = `${i + 1}:${operations[i]}`;
+      chip.onclick = () => {
+        stopPlayback();
+        currentStep = i + 1;
+        updateUI();
+      };
+      frag.appendChild(chip);
+    }
+    traceWindow.innerHTML = '';
+    traceWindow.appendChild(frag);
+  }
+
+  // --- Recalculate All Algorithms & Benchmarks ---
+  function runSimulation(newArr) {
+    stopPlayback();
+    initialArray = [...newArr];
+
+    const sortedCopy = [...initialArray].sort((a, b) => a - b);
+    rankLookup = new Map();
+    sortedCopy.forEach((v, idx) => rankLookup.set(v, idx));
+
+    const turkOps = solveTurk(initialArray);
+    const chunkOps = solveChunk(initialArray);
+    const radixOps = solveRadix(initialArray);
+    const insOps = initialArray.length <= 1200 ? solveInsertion(initialArray) : null;
+
+    const allResults = {
+      turk: turkOps,
+      chunk: chunkOps,
+      radix: radixOps,
+      insertion: insOps || radixOps
+    };
+
+    operations = allResults[currentAlgo];
+    currentStep = 0;
+    stepSlider.max = operations.length;
+
+    const n = initialArray.length;
+    document.getElementById('nDisp').textContent = n;
+
+    // Update Comparison Box
+    document.getElementById('compareBox').innerHTML = `
+      <div>Turk: <strong>${turkOps.length}</strong> | Chunk: <strong>${chunkOps.length}</strong></div>
+      <div>Radix: <strong>${radixOps.length}</strong> | Insertion: <strong>${insOps ? insOps.length : 'N/A (>1200)'}</strong></div>
+    `;
+
+    // Update 42 Benchmark Status
+    const benchDisp = document.getElementById('benchmarkDisp');
+    const benchNote = document.getElementById('benchmarkNote');
+    const count = operations.length;
+
+    if (n === 100) {
+      benchNote.textContent = '42 Max Grade (n=100): < 700 ops';
+      if (count < 700) { benchDisp.textContent = '100% PASS'; benchDisp.className = 'stat-value benchmark-pass'; }
+      else if (count < 1100) { benchDisp.textContent = 'PARTIAL'; benchDisp.className = 'stat-value benchmark-warn'; }
+      else { benchDisp.textContent = 'OVER LIMIT'; benchDisp.className = 'stat-value benchmark-fail'; }
+    } else if (n === 500) {
+      benchNote.textContent = '42 Max Grade (n=500): < 5,500 ops';
+      if (count < 5500) { benchDisp.textContent = '100% PASS'; benchDisp.className = 'stat-value benchmark-pass'; }
+      else if (count < 8500) { benchDisp.textContent = 'PARTIAL'; benchDisp.className = 'stat-value benchmark-warn'; }
+      else { benchDisp.textContent = 'OVER LIMIT'; benchDisp.className = 'stat-value benchmark-fail'; }
+    } else if (n === 5) {
+      benchNote.textContent = '42 Limit (n=5): <= 12 ops';
+      benchDisp.textContent = count <= 12 ? 'PASS' : 'OVER LIMIT';
+      benchDisp.className = count <= 12 ? 'stat-value benchmark-pass' : 'stat-value benchmark-fail';
+    } else {
+      const estMax = Math.round(n * Math.log2(n) * 1.25);
+      benchNote.textContent = `Scaled O(n log n) ref: ~${estMax} ops`;
+      benchDisp.textContent = `${count} ops`;
+      benchDisp.className = 'stat-value';
+    }
+
+    buildSnapshots();
+    updateUI();
+  }
+
+  function generateRandomUnique(n) {
+    const arr = Array.from({ length: n }, (_, i) => i + 1);
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // --- Playback Loop ---
+  function getStepsPerSecond() {
+    const v = Number(speedSlider.value); // 1 to 100
+    // Exponential speed curve from 2 steps/sec up to 1500 steps/sec for n >= 500
+    return Math.round(2 * Math.pow(1.069, v));
+  }
+
+  function playbackLoop(timestamp) {
+    if (!isPlaying) return;
+    if (!lastFrameTime) lastFrameTime = timestamp;
+    const elapsed = (timestamp - lastFrameTime) / 1000;
+    const sps = getStepsPerSecond();
+    const stepsToAdvance = Math.floor(elapsed * sps);
+
+    if (stepsToAdvance >= 1) {
+      lastFrameTime = timestamp;
+      currentStep = Math.min(operations.length, currentStep + stepsToAdvance);
+      updateUI();
+      if (currentStep >= operations.length) {
+        stopPlayback();
+        return;
+      }
+    }
+    animFrameId = requestAnimationFrame(playbackLoop);
+  }
+
+  function startPlayback() {
+    if (currentStep >= operations.length) currentStep = 0;
+    isPlaying = true;
+    playBtn.textContent = 'Pause';
+    lastFrameTime = 0;
+    animFrameId = requestAnimationFrame(playbackLoop);
+  }
+
+  function stopPlayback() {
+    isPlaying = false;
+    playBtn.textContent = 'Play';
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+  }
+
+  // --- Event Listeners ---
+  const algoDescriptions = {
+    turk: 'Calculates exact rotation costs & uses combined rr/rrr moves. Best for 42 grading limits.',
+    chunk: 'Partitions values into sliding range buckets in B (hourglass), then pulls max back to A.',
+    radix: 'Sorts bit-by-bit (LSD) using base-2 buckets. Predictable O(n log n) without comparisons.',
+    insertion: 'Repeatedly locates the minimum element in A and pushes it to B. Simple O(n²).'
+  };
+
+  document.querySelectorAll('.algo-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.algo-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentAlgo = btn.dataset.algo;
+      document.getElementById('algoNote').textContent = algoDescriptions[currentAlgo];
+      runSimulation(initialArray);
+    });
+  });
+
+  document.getElementById('shuffleBtn').addEventListener('click', () => {
+    let n = parseInt(sizeInput.value, 10);
+    if (isNaN(n) || n < 3) n = 3;
+    if (n > 2000) n = 2000;
+    sizeInput.value = n;
+    errorMsg.style.display = 'none';
+    runSimulation(generateRandomUnique(n));
+  });
+
+  [8, 100, 500, 750].forEach(preset => {
+    document.getElementById(`preset${preset}`).addEventListener('click', () => {
+      sizeInput.value = preset;
+      errorMsg.style.display = 'none';
+      runSimulation(generateRandomUnique(preset));
+    });
+  });
+
+  document.getElementById('loadCustomBtn').addEventListener('click', () => {
+    const raw = customInput.value.trim();
+    if (!raw) return;
+    const parts = raw.split(/[\s,]+/).map(Number);
+    if (parts.length < 3 || parts.some(isNaN) || new Set(parts).size !== parts.length) {
+      errorMsg.style.display = 'block';
+      return;
+    }
+    errorMsg.style.display = 'none';
+    sizeInput.value = parts.length;
+    runSimulation(parts);
+  });
+
+  playBtn.addEventListener('click', () => isPlaying ? stopPlayback() : startPlayback());
+  document.getElementById('resetBtn').addEventListener('click', () => { stopPlayback(); currentStep = 0; updateUI(); });
+  document.getElementById('endBtn').addEventListener('click', () => { stopPlayback(); currentStep = operations.length; updateUI(); });
+  document.getElementById('prevBtn').addEventListener('click', () => { stopPlayback(); currentStep = Math.max(0, currentStep - 1); updateUI(); });
+  document.getElementById('nextBtn').addEventListener('click', () => { stopPlayback(); currentStep = Math.min(operations.length, currentStep + 1); updateUI(); });
+
+  stepSlider.addEventListener('input', (e) => {
+    stopPlayback();
+    currentStep = Number(e.target.value);
+    updateUI();
+  });
+
+  speedSlider.addEventListener('input', () => {
+    speedLabel.textContent = `${getStepsPerSecond()} ops/s`;
+  });
+
+  document.getElementById('exportOpsBtn').addEventListener('click', (e) => {
+    navigator.clipboard.writeText(operations.join('\n')).then(() => {
+      const orig = e.target.textContent;
+      e.target.textContent = 'Copied!';
+      setTimeout(() => e.target.textContent = orig, 1500);
+    });
+  });
+
+  window.addEventListener('resize', () => {
+    renderStackCanvas(canvasA, ctxA, activeA, rankLookup, initialArray.length);
+    renderStackCanvas(canvasB, ctxB, activeB, rankLookup, initialArray.length);
+  });
+
+  // Initialize on load with n = 100
+  speedLabel.textContent = `${getStepsPerSecond()} ops/s`;
+  runSimulation(generateRandomUnique(100));
+</script>
+</body>
+</html>
