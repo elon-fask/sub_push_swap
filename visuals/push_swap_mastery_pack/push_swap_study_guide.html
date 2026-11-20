@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>push_swap — Mastery Guide</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231d2834'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='16' fill='%237cc7ff' text-anchor='middle'%3EPS%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#eef1f5; --panel:#ffffff; --ink:#1d2834; --muted:#586877; --line:#d2dbe3;
+  --a:#2563a8; --a-bg:#e4eef9; --b:#0e8a84; --b-bg:#e0f1ef; --rust:#b4552a; --rust-bg:#f8e9e1;
+  --gold:#9a7416; --gold-bg:#f6efdc;
+  --code-bg:#1b2630; --code-ink:#e6edf3; --code-line:#2c3a47;
+  --mono:ui-monospace,'IBM Plex Mono',SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);align-items:start}
+/* ---------- sidebar ---------- */
+nav.side{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;background:#22303d;color:#cdd8e2;padding:18px 14px 40px;border-right:1px solid #18242e}
+nav.side .brand{font-family:var(--mono);font-size:14px;font-weight:600;color:#fff;padding:4px 10px 14px;border-bottom:1px solid #334655;margin-bottom:12px}
+nav.side .brand small{display:block;color:#8fa6b8;font-weight:400;margin-top:3px;font-size:11px}
+nav.side .grp{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:#7e97ab;padding:12px 10px 5px}
+nav.side a{display:block;color:#c3d2de;text-decoration:none;padding:4px 10px;border-radius:6px;font-size:13px}
+nav.side a:hover{background:#2c3e4e;color:#fff}
+nav.side a.active{background:#2f5878;color:#fff}
+/* ---------- main ---------- */
+main{padding:34px 42px 90px;max-width:1080px}
+header.hero{background:linear-gradient(180deg,#22303d,#2a3b49);color:#eef4f9;border-radius:14px;padding:30px 32px;margin-bottom:26px}
+header.hero h1{margin:0 0 8px;font-size:28px;letter-spacing:-.01em}
+header.hero p{margin:6px 0;color:#b9cbd9;max-width:760px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+.stat{background:#2f4354;border:1px solid #3d5568;border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-family:var(--mono);font-size:22px;color:#8fd0ff}
+.stat span{font-size:12px;color:#a9bfcf}
+section.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px 26px;margin:0 0 22px}
+section.card>h2{margin:0 0 4px;font-size:21px;letter-spacing:-.01em}
+section.card>p.lead{color:var(--muted);margin:6px 0 18px}
+h3{font-size:16px;margin:24px 0 10px;padding-top:8px;border-top:1px dashed var(--line)}
+h4{font-size:14px;margin:16px 0 8px;color:#33475a}
+.crumb{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:6px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:#f0f4f8;font-weight:600}
+td.mono,th.mono{font-family:var(--mono);font-size:12.5px}
+code{font-family:var(--mono);font-size:12.5px;background:#e8edf2;padding:1px 5px;border-radius:4px}
+pre{background:var(--code-bg);color:var(--code-ink);border-radius:10px;padding:14px 16px;overflow:auto;font-family:var(--mono);font-size:12.5px;line-height:1.55}
+pre .c{color:#7d93a6} pre .k{color:#8fd0ff} pre .n{color:#f0c674} pre .s{color:#9fd8a8}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.note{border-left:3px solid var(--a);background:var(--a-bg);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:13.5px}
+.warn{border-left:3px solid var(--rust);background:var(--rust-bg);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:13.5px}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;padding:1px 7px;border-radius:10px;background:#e8edf2;color:#33475a;margin:0 3px}
+.tag.a{background:var(--a-bg);color:var(--a)} .tag.b{background:var(--b-bg);color:var(--b)} .tag.r{background:var(--rust-bg);color:var(--rust)}
+/* stack visuals */
+.stackviz{display:inline-flex;flex-direction:column;min-width:120px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fbfcfe}
+.stackviz .cap{font-family:var(--mono);font-size:11px;color:var(--muted);padding:4px 10px;background:#eef3f7;border-bottom:1px solid var(--line)}
+.stackviz .cell{font-family:var(--mono);font-size:13px;padding:5px 14px;border-bottom:1px solid #eef2f5;text-align:center}
+.stackviz .cell.top{background:var(--a-bg);color:var(--a);font-weight:600}
+.stackviz.b .cell.top{background:var(--b-bg);color:var(--b)}
+.stackviz.b .cap{background:#e9f3f2}
+.oparrow{display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);color:var(--rust);font-weight:600;padding:0 12px}
+.pair{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+/* flow diagram */
+svg.fig{width:100%;height:auto;background:#fbfcfe;border:1px solid var(--line);border-radius:10px}
+/* bars */
+.bars{margin:12px 0}
+.barrow{display:grid;grid-template-columns:150px 1fr 70px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
+.bar{height:18px;background:#e8edf2;border-radius:5px;position:relative;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px;background:var(--a)}
+.bar i.b{background:var(--b)} .bar i.r{background:var(--rust)} .bar i.g{background:#6b8f3a}
+.barrow b{font-family:var(--mono);font-size:12.5px;text-align:right}
+details{border:1px solid var(--line);border-radius:9px;padding:10px 14px;margin:9px 0;background:#fbfcfe}
+details summary{cursor:pointer;font-weight:600;font-size:14px}
+details[open]{background:#fff}
+.toc-pill{display:inline-block;font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:20px;padding:2px 10px;margin:3px 4px 0 0;background:#fff}
+.foot{color:var(--muted);font-size:12.5px;text-align:center;margin-top:30px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav.side{position:static;max-height:none}main{padding:20px 16px}.stats{grid-template-columns:repeat(2,1fr)}.grid2,.grid3{grid-template-columns:1fr}}
+@media print{
+  .layout{display:block}
+  nav.side{position:static;max-height:none;overflow:visible;border-right:none}
+  main{padding:0}
+  section.card{break-inside:avoid-page;margin-bottom:14px}
+  details{break-inside:avoid-page}
+  pre{white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="side">
+  <div class="brand">push_swap<small>mastery pack · defense edition</small></div>
+  <div class="grp">Start here</div>
+  <a href="#overview">Overview & measured facts</a>
+  <a href="#subject">The 11 instructions</a>
+  <a href="#flow">Program flow</a>
+  <a href="#arch">Architecture & data</a>
+  <div class="grp">Mechanics</div>
+  <a href="#ring">Ring buffer deep dive</a>
+  <a href="#ops">Operations layer</a>
+  <a href="#parse">Parsing layer</a>
+  <a href="#orchestr">Disorder & dispatch</a>
+  <div class="grp">Algorithms</div>
+  <a href="#small">Small sort (N ≤ 5)</a>
+  <a href="#selection">Selection sort</a>
+  <a href="#chunk">Chunk sort</a>
+  <a href="#turk">Turk sort</a>
+  <a href="#evidence">Measured evidence</a>
+  <div class="grp">Surrounding pieces</div>
+  <a href="#checker">Bonus checker</a>
+  <a href="#makefile">Makefile</a>
+  <a href="#functions">Function index</a>
+  <a href="#qa">Defense Q&amp;A</a>
+  <a href="#rewrite">No-libft rewrite plan</a>
+  <a href="#tests">Test checklist</a>
+</nav>
+<main>
+
+<header class="hero" id="overview">
+  <h1>push_swap — codebase mastery guide</h1>
+  <p>Project <code style="background:#2f4354;color:#cfe6ff">sub_push_swap</code>: sort a stack with a limited instruction set. This guide explains the real source file by file, visualizes every data movement, and records measured benchmarks so you can defend the project orally and rebuild it from scratch.</p>
+  <div class="stats">
+    <div class="stat"><b>41</b><span>demo 12 elements, adaptive (chunk)</span></div>
+    <div class="stat"><b>34</b><span>same demo forced Turk (best)</span></div>
+    <div class="stat"><b>542–652</b><span>ops, random N = 100</span></div>
+    <div class="stat"><b>5.2k–5.8k</b><span>ops, random N = 500</span></div>
+  </div>
+  <p style="margin-top:16px">How to use: read top to bottom once, then rehearse the Q&amp;A section. Markdown copies of every chapter live in <code style="background:#2f4354;color:#cfe6ff">docs/</code>; a compilable no-libft teaching core lives in <code style="background:#2f4354;color:#cfe6ff">reference_rewrite/</code>.</p>
+</header>
+
+<section class="card" id="subject">
+  <div class="crumb">01 · subject rules</div>
+  <h2>The two stacks and the eleven instructions</h2>
+  <p class="lead">Stack A starts with the input numbers (top at offset 0). Stack B starts empty. Only the eleven operations below may be printed; the goal is ascending A, empty B, in as few moves as possible.</p>
+  <div class="grid2">
+    <div>
+      <table>
+        <tr><th class="mono">op</th><th>effect (A top → bottom shown)</th></tr>
+        <tr><td class="mono">sa</td><td>swap the top two of A</td></tr>
+        <tr><td class="mono">sb</td><td>swap the top two of B</td></tr>
+        <tr><td class="mono">ss</td><td>sa + sb together</td></tr>
+        <tr><td class="mono">pa</td><td>move B's top onto A's top</td></tr>
+        <tr><td class="mono">pb</td><td>move A's top onto B's top</td></tr>
+        <tr><td class="mono">ra</td><td>A: top becomes bottom (rotate up)</td></tr>
+        <tr><td class="mono">rb</td><td>B: top becomes bottom</td></tr>
+        <tr><td class="mono">rr</td><td>ra + rb together</td></tr>
+        <tr><td class="mono">rra</td><td>A: bottom becomes top (rotate down)</td></tr>
+        <tr><td class="mono">rrb</td><td>B: bottom becomes top</td></tr>
+        <tr><td class="mono">rrr</td><td>rra + rrb together</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="pair">
+        <div class="stackviz"><div class="cap">A (start)</div><div class="cell top">7</div><div class="cell">2</div><div class="cell">9</div><div class="cell">1</div></div>
+        <div class="oparrow">pb →</div>
+        <div class="stackviz b"><div class="cap">B</div><div class="cell top">7</div></div>
+        <div class="stackviz"><div class="cap">A after</div><div class="cell top">2</div><div class="cell">9</div><div class="cell">1</div></div>
+      </div>
+      <div class="note">Stacks are drawn <b>top at the top</b>. In the code, storage is a circular array; "top" is tracked by a <code>head</code> index (see the ring-buffer chapter).</div>
+      <h4>Subject gates</h4>
+      <table>
+        <tr><th>N</th><th>typical move budget</th></tr>
+        <tr><td class="mono">≤ 3</td><td>≤ 3 moves</td></tr>
+        <tr><td class="mono">5</td><td>≤ 12 moves</td></tr>
+        <tr><td class="mono">100</td><td>full score ≲ 700</td></tr>
+        <tr><td class="mono">500</td><td>full score ≲ 5500; pass ≲ 8500</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="card" id="flow">
+  <div class="crumb">02 · runtime behavior</div>
+  <h2>Program flow, main to stdout</h2>
+  <p class="lead">One pipeline: parse → measure → dispatch → solve → print. Solvers never print; they call operation wrappers that print and count.</p>
+  <svg class="fig" viewBox="0 0 980 430" role="img" aria-label="program flow diagram">
+    <defs>
+      <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#586877"/></marker>
+    </defs>
+    <g font-family="system-ui,sans-serif" font-size="12.5">
+      <rect x="20" y="20" width="150" height="44" rx="8" fill="#22303d"/><text x="95" y="46" fill="#fff" text-anchor="middle">main()</text>
+      <line x1="95" y1="64" x2="95" y2="88" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="20" y="92" width="150" height="56" rx="8" fill="#e4eef9" stroke="#2563a8"/><text x="95" y="114" text-anchor="middle" fill="#1d2834" font-weight="600">parse_options</text><text x="95" y="132" text-anchor="middle" fill="#586877" font-size="11">flags -s -m -c -b</text>
+      <line x1="170" y1="120" x2="214" y2="120" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="218" y="92" width="170" height="56" rx="8" fill="#e4eef9" stroke="#2563a8"/><text x="303" y="114" text-anchor="middle" fill="#1d2834" font-weight="600">parse_operands</text><text x="303" y="132" text-anchor="middle" fill="#586877" font-size="11">count, allocate, validate ints</text>
+      <line x1="388" y1="120" x2="432" y2="120" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="436" y="92" width="140" height="56" rx="8" fill="#e0f1ef" stroke="#0e8a84"/><text x="506" y="114" text-anchor="middle" fill="#1d2834" font-weight="600">stacks.a filled</text><text x="506" y="132" text-anchor="middle" fill="#586877" font-size="11">head = 0, linear data[]</text>
+      <line x1="576" y1="120" x2="620" y2="120" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="624" y="92" width="150" height="56" rx="8" fill="#f6efdc" stroke="#9a7416"/><text x="699" y="114" text-anchor="middle" fill="#1d2834" font-weight="600">init_stats</text><text x="699" y="132" text-anchor="middle" fill="#586877" font-size="11">zero 11 counters</text>
+      <line x1="699" y1="148" x2="699" y2="180" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="624" y="184" width="150" height="48" rx="8" fill="#22303d"/><text x="699" y="213" fill="#fff" text-anchor="middle">orchestrator()</text>
+      <line x1="624" y1="208" x2="560" y2="208" stroke="#586877" marker-end="url(#ar)"/>
+      <polygon points="440,184 556,208 440,232 324,208" fill="#fff" stroke="#586877"/>
+      <text x="440" y="205" text-anchor="middle" font-size="11.5">is_sorted(A)?</text><text x="440" y="220" text-anchor="middle" font-size="10.5" fill="#586877">yes → return, no output</text>
+      <line x1="324" y1="208" x2="286" y2="208" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="116" y="184" width="166" height="48" rx="8" fill="#f6efdc" stroke="#9a7416"/><text x="199" y="204" text-anchor="middle" font-weight="600">record_disorder</text><text x="199" y="221" text-anchor="middle" font-size="11" fill="#586877">inversions / C(n,2)</text>
+      <line x1="199" y1="232" x2="199" y2="258" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="116" y="262" width="166" height="44" rx="8" fill="#f8e9e1" stroke="#b4552a"/><text x="199" y="288" text-anchor="middle" font-weight="600">dispatch_strategy</text>
+      <line x1="282" y1="284" x2="330" y2="284" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="334" y="258" width="120" height="44" rx="8" fill="#e4eef9" stroke="#2563a8"/><text x="394" y="277" text-anchor="middle" font-size="11.5">selection_sort</text><text x="394" y="292" text-anchor="middle" font-size="10.5" fill="#586877">&lt; 0.2 · O(n²)</text>
+      <rect x="462" y="258" width="120" height="44" rx="8" fill="#e0f1ef" stroke="#0e8a84"/><text x="522" y="277" text-anchor="middle" font-size="11.5">chunk_sort</text><text x="522" y="292" text-anchor="middle" font-size="10.5" fill="#586877">0.2–0.5 · O(n√n)</text>
+      <rect x="590" y="258" width="120" height="44" rx="8" fill="#efe6f6" stroke="#6b4fa0"/><text x="650" y="277" text-anchor="middle" font-size="11.5">turk_sort</text><text x="650" y="292" text-anchor="middle" font-size="10.5" fill="#586877">≥ 0.5 · greedy</text>
+      <line x1="394" y1="302" x2="394" y2="330" stroke="#586877"/>
+      <line x1="522" y1="302" x2="522" y2="330" stroke="#586877"/>
+      <line x1="650" y1="302" x2="650" y2="330" stroke="#586877"/>
+      <rect x="334" y="334" width="376" height="44" rx="8" fill="#e8edf2" stroke="#586877"/><text x="522" y="354" text-anchor="middle" font-weight="600">operation_* wrappers</text><text x="522" y="370" text-anchor="middle" font-size="11" fill="#586877">primitive → print mnemonic to stdout → stats counter</text>
+      <line x1="522" y1="378" x2="522" y2="402" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="420" y="406" width="204" height="20" rx="6" fill="#22303d"/><text x="522" y="420" fill="#fff" text-anchor="middle" font-size="11.5">stdout: sa pb ra …  ·  stderr: bench (only with -b)</text>
+    </g>
+  </svg>
+  <h3>Stage table</h3>
+  <table>
+    <tr><th>stage</th><th>functions</th><th>failure path</th></tr>
+    <tr><td class="mono">0 · no args</td><td><code>main</code> → <code>return (0)</code></td><td>exit 0, no output (subject rule)</td></tr>
+    <tr><td class="mono">1 · options</td><td><code>parse_options</code> → scan_arguments, short/long parsers, apply_option</td><td>unknown flag → <code>Error\n</code> stderr, exit 1</td></tr>
+    <tr><td class="mono">2 · operands</td><td><code>count_operand_tokens</code> → <code>initialize_stacks</code> → <code>parse_operand</code> per token</td><td>non-digit, overflow, duplicate, empty token → <code>Error\n</code>, exit 1</td></tr>
+    <tr><td class="mono">3 · early exit</td><td><code>is_sorted</code> on A</td><td>already sorted → return silently</td></tr>
+    <tr><td class="mono">4 · measure</td><td><code>record_disorder</code> → <code>calculate_disorder_ratio</code></td><td>—</td></tr>
+    <tr><td class="mono">5 · dispatch</td><td><code>select_adaptive_strategy</code> / explicit flag; <code>execute_strategy</code></td><td>—</td></tr>
+    <tr><td class="mono">6 · solve</td><td>selection / chunk / turk; N ≤ 5 routes to <code>small_sort</code></td><td>—</td></tr>
+    <tr><td class="mono">7 · report</td><td><code>print_benchmark</code> on stderr if <code>-b</code></td><td>stdout stays pure instructions</td></tr>
+    <tr><td class="mono">8 · cleanup</td><td><code>destroy_stacks</code>, <code>destroy_parse_result</code></td><td>zero leaks on every path</td></tr>
+  </table>
+  <div class="note"><b>Mental model:</b> solvers are decision makers; operation wrappers are the only writers. The bonus checker calls the same primitives but skips writers, which is why it validates any solver output.</div>
+</section>
+
+<section class="card" id="arch">
+  <div class="crumb">03 · source map</div>
+  <h2>Architecture and module dependencies</h2>
+  <p class="lead">Six layers with strict one-direction dependencies: upper layers call lower layers; sorting never parses; operations never allocate.</p>
+  <svg class="fig" viewBox="0 0 980 300" role="img" aria-label="module dependency graph">
+    <g font-family="system-ui,sans-serif" font-size="12">
+      <rect x="360" y="12" width="260" height="40" rx="8" fill="#22303d"/><text x="490" y="36" fill="#fff" text-anchor="middle" font-weight="600">main.c · orchestrator.c · orchestrator_dispatch.c</text>
+      <line x1="430" y1="52" x2="300" y2="86" stroke="#586877" marker-end="url(#ar)"/>
+      <line x1="490" y1="52" x2="490" y2="86" stroke="#586877" marker-end="url(#ar)"/>
+      <line x1="550" y1="52" x2="680" y2="86" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="180" y="90" width="240" height="40" rx="8" fill="#f6efdc" stroke="#9a7416"/><text x="300" y="114" text-anchor="middle" font-weight="600">parsing/ (options + operands)</text>
+      <rect x="370" y="90" width="240" height="40" rx="8" fill="#f6efdc" stroke="#9a7416"/><text x="490" y="114" text-anchor="middle" font-weight="600">stats/ (counters + benchmark)</text>
+      <rect x="580" y="90" width="200" height="40" rx="8" fill="#efe6f6" stroke="#6b4fa0"/><text x="680" y="114" text-anchor="middle" font-weight="600">sorting/ (4 solvers)</text>
+      <line x1="300" y1="130" x2="300" y2="164" stroke="#586877" marker-end="url(#ar)"/>
+      <line x1="680" y1="130" x2="680" y2="164" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="180" y="168" width="600" height="40" rx="8" fill="#e8edf2" stroke="#586877"/><text x="480" y="192" text-anchor="middle" font-weight="600">operations/ — 11 printed wrappers (sa … rrr)</text>
+      <line x1="480" y1="208" x2="480" y2="242" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="180" y="246" width="600" height="40" rx="8" fill="#e4eef9" stroke="#2563a8"/><text x="480" y="270" text-anchor="middle" font-weight="600">stack/ — ring buffer primitives (push/pop/swap/rotate/rrotate)</text>
+    </g>
+  </svg>
+  <div class="grid2" style="margin-top:16px">
+    <div>
+      <h4>Directory map (src/)</h4>
+      <table>
+        <tr><th>folder</th><th>responsibility</th></tr>
+        <tr><td class="mono">stack/</td><td>data structure and five primitives</td></tr>
+        <tr><td class="mono">operations/</td><td>mnemonic output + stats recording</td></tr>
+        <tr><td class="mono">parsing/options/</td><td>flags and long options</td></tr>
+        <tr><td class="mono">parsing/operands/</td><td>integer validation and ring fill</td></tr>
+        <tr><td class="mono">stats/</td><td>per-op counters, benchmark report</td></tr>
+        <tr><td class="mono">sorting/utils/</td><td>offsets, extremes, rotation distance</td></tr>
+        <tr><td class="mono">sorting/small_sort/</td><td>N = 2, 3, 4, 5</td></tr>
+        <tr><td class="mono">sorting/selection/</td><td>simple strategy</td></tr>
+        <tr><td class="mono">sorting/chunk/</td><td>medium strategy</td></tr>
+        <tr><td class="mono">sorting/turk/</td><td>complex strategy</td></tr>
+        <tr><td class="mono">bonus/</td><td>checker binary (no printing)</td></tr>
+      </table>
+    </div>
+    <div>
+      <h4>Key data structures</h4>
+      <pre><span class="c">// stack/stack.h</span>
+<span class="k">typedef struct</span> s_stack {
+    <span class="k">int</span>       *data;        <span class="c">// ring buffer</span>
+    size_t    capacity;     <span class="c">// #input integers</span>
+    size_t    head;         <span class="c">// physical top index</span>
+    size_t    size;         <span class="c">// active elements</span>
+} t_stack;
+
+<span class="k">typedef struct</span> s_stacks { t_stack a, b; } t_stacks;
+
+<span class="c">// push_swap_internal.h</span>
+<span class="k">typedef struct</span> s_context {
+    t_stacks  stacks;
+    t_stats   stats;
+} t_context;
+
+<span class="k">typedef enum</span> e_strategy {
+    STRATEGY_ADAPTIVE, STRATEGY_SIMPLE,
+    STRATEGY_MEDIUM,  STRATEGY_COMPLEX
+} t_strategy;</pre>
+      <p style="font-size:13px;color:var(--muted)"><code>t_program_options</code> holds the chosen strategy, the explicit-flag flag, and the bench flag; <code>t_stats</code> holds 11 counters plus the recorded ratio and selected strategy.</p>
+    </div>
+  </div>
+</section>
+
+<section class="card" id="ring">
+  <div class="crumb">04 · data structure</div>
+  <h2>The circular ring buffer, visually</h2>
+  <p class="lead">Both stacks are fixed-capacity integer arrays. The top element never moves; a <code>head</code> index marks where the top sits, and logical offset <code>k</code> resolves to physical <code>(head + k) mod capacity</code>.</p>
+  <div class="grid2">
+    <div>
+      <h4>Physical vs logical view (capacity 8, 5 active)</h4>
+      <svg class="fig" viewBox="0 0 460 220" role="img" aria-label="ring buffer anatomy">
+        <g font-family="ui-monospace,monospace" font-size="11">
+          <text x="10" y="18" fill="#586877">physical index →</text>
+          <g>
+            <rect x="10" y="34" width="48" height="34" fill="#eef3f7" stroke="#d2dbe3"/><text x="34" y="55" text-anchor="middle">0</text>
+            <rect x="62" y="34" width="48" height="34" fill="#eef3f7" stroke="#d2dbe3"/><text x="86" y="55" text-anchor="middle">1</text>
+            <rect x="114" y="34" width="48" height="34" fill="#e4eef9" stroke="#2563a8"/><text x="138" y="55" text-anchor="middle" fill="#2563a8" font-weight="600">2 · 7</text>
+            <rect x="166" y="34" width="48" height="34" fill="#e4eef9" stroke="#2563a8"/><text x="190" y="55" text-anchor="middle">3 · 2</text>
+            <rect x="218" y="34" width="48" height="34" fill="#e4eef9" stroke="#2563a8"/><text x="242" y="55" text-anchor="middle">4 · 9</text>
+            <rect x="270" y="34" width="48" height="34" fill="#e4eef9" stroke="#2563a8"/><text x="294" y="55" text-anchor="middle">5 · 1</text>
+            <rect x="322" y="34" width="48" height="34" fill="#e4eef9" stroke="#2563a8"/><text x="346" y="55" text-anchor="middle">6 · 4</text>
+            <rect x="374" y="34" width="48" height="34" fill="#eef3f7" stroke="#d2dbe3"/><text x="398" y="55" text-anchor="middle">7</text>
+          </g>
+          <text x="138" y="88" text-anchor="middle" fill="#b4552a" font-weight="600">▲ head (top = 7)</text>
+          <text x="10" y="120" fill="#586877">logical offset →</text>
+          <rect x="114" y="128" width="48" height="30" fill="#f8e9e1" stroke="#b4552a"/><text x="138" y="148" text-anchor="middle">0 · 7</text>
+          <rect x="166" y="128" width="48" height="30" fill="#fbfcfe" stroke="#d2dbe3"/><text x="190" y="148" text-anchor="middle">1 · 2</text>
+          <rect x="218" y="128" width="48" height="30" fill="#fbfcfe" stroke="#d2dbe3"/><text x="242" y="148" text-anchor="middle">2 · 9</text>
+          <rect x="270" y="128" width="48" height="30" fill="#fbfcfe" stroke="#d2dbe3"/><text x="294" y="148" text-anchor="middle">3 · 1</text>
+          <rect x="322" y="128" width="48" height="30" fill="#fbfcfe" stroke="#d2dbe3"/><text x="346" y="148" text-anchor="middle">4 · 4</text>
+          <text x="10" y="186" fill="#1d2834">offset k → physical (head + k) % capacity</text>
+          <text x="10" y="204" fill="#586877">head moves; values wrap around the array boundary</text>
+        </g>
+      </svg>
+    </div>
+    <div>
+      <h4>Invariants to memorize</h4>
+      <table>
+        <tr><td class="mono">push_top</td><td><code>head = (head − 1 + cap) % cap</code>; write; <code>size++</code></td></tr>
+        <tr><td class="mono">pop_top</td><td>read <code>data[head]</code>; <code>head = (head + 1) % cap</code>; <code>size--</code></td></tr>
+        <tr><td class="mono">swap_top</td><td>exchange <code>data[head]</code> with <code>data[(head+1)%cap]</code></td></tr>
+        <tr><td class="mono">rotate (ra/rb)</td><td>save top; advance head; write saved value at new bottom <code>(head + size − 1) % cap</code></td></tr>
+        <tr><td class="mono">reverse_rotate (rra/rrb)</td><td>read bottom; back head up; write bottom value at new head</td></tr>
+      </table>
+      <div class="warn"><b>Defense nuance:</b> unlike a pure head-pointer ring, this implementation <i>copies one value</i> on rotate so that the ring stays dense between head and bottom. Empty stacks never rotate; <code>size &lt; 2</code> returns <code>STACK_UNCHANGED</code>.</div>
+    </div>
+  </div>
+  <h3>Primitive before / after (example A = <span class="mono">7 2 9 1</span>, top at left-top)</h3>
+  <div class="grid3">
+    <div class="pair"><div class="stackviz"><div class="cap">before</div><div class="cell top">7</div><div class="cell">2</div><div class="cell">9</div><div class="cell">1</div></div><div class="oparrow">sa</div><div class="stackviz"><div class="cap">after</div><div class="cell top">2</div><div class="cell">7</div><div class="cell">9</div><div class="cell">1</div></div></div>
+    <div class="pair"><div class="stackviz"><div class="cap">before A</div><div class="cell top">7</div><div class="cell">2</div><div class="cell">9</div><div class="cell">1</div></div><div class="oparrow">ra</div><div class="stackviz"><div class="cap">after A</div><div class="cell top">2</div><div class="cell">9</div><div class="cell">1</div><div class="cell">7</div></div></div>
+    <div class="pair"><div class="stackviz"><div class="cap">before A</div><div class="cell top">7</div><div class="cell">2</div><div class="cell">9</div><div class="cell">1</div></div><div class="oparrow">rra</div><div class="stackviz"><div class="cap">after A</div><div class="cell top">1</div><div class="cell">7</div><div class="cell">2</div><div class="cell">9</div></div></div>
+  </div>
+  <h3>Real code — <code>stack_rotate.c</code> (condensed)</h3>
+  <pre><span class="k">t_stack_status</span> stack_rotate(t_stack *stack)
+{
+    <span class="k">int</span>             top_value;
+    size_t          bottom_index;
+
+    <span class="k">if</span> (stack-&gt;size &lt; 2)
+        <span class="k">return</span> (STACK_UNCHANGED);
+    top_value = stack-&gt;data[stack-&gt;head];
+    ++stack-&gt;head;
+    <span class="k">if</span> (stack-&gt;head == stack-&gt;capacity)
+        stack-&gt;head = 0;
+    bottom_index = (stack-&gt;head + stack-&gt;size - 1) % stack-&gt;capacity;
+    stack-&gt;data[bottom_index] = top_value;
+    <span class="k">return</span> (STACK_CHANGED);
+}</pre>
+</section>
+
+<section class="card" id="ops">
+  <div class="crumb">05 · output layer</div>
+  <h2>Operations layer: primitives + printing + counting</h2>
+  <p class="lead">Every solver calls a wrapper from <code>operations/</code>; the wrapper calls the primitive, and only when the stack actually changes does it print the mnemonic and increment a counter.</p>
+  <table>
+    <tr><th>wrapper file</th><th>functions</th><th>primitive used</th><th>prints</th></tr>
+    <tr><td class="mono">operation_push.c</td><td class="mono">operation_pa / operation_pb</td><td>pop + push on the other ring</td><td class="mono">pa / pb</td></tr>
+    <tr><td class="mono">operation_swap.c</td><td class="mono">operation_sa / sb / ss</td><td class="mono">stack_swap_top</td><td class="mono">sa / sb / ss</td></tr>
+    <tr><td class="mono">operation_rotate.c</td><td class="mono">operation_ra / rb / rr</td><td class="mono">stack_rotate</td><td class="mono">ra / rb / rr</td></tr>
+    <tr><td class="mono">operation_reverse_rotate.c</td><td class="mono">operation_rra / rrb / rrr</td><td class="mono">stack_reverse_rotate</td><td class="mono">rra / rrb / rrr</td></tr>
+  </table>
+  <div class="grid2">
+    <div>
+      <h4>Measured wrapper pattern (<code>operation_pb.c</code>)</h4>
+      <pre><span class="k">void</span> operation_pb(t_stacks *stacks, t_stats *stats)
+{
+    <span class="k">int</span> value;
+
+    <span class="k">if</span> (stack_pop_top(&amp;stacks-&gt;a, &amp;value) == STACK_UNCHANGED)
+        <span class="k">return</span>;
+    stack_push_top(&amp;stacks-&gt;b, value);
+    ft_printf(<span class="s">"pb\n"</span>);
+    record_operation(stats, OPERATION_PB);
+}</pre>
+    </div>
+    <div>
+      <h4>Combined ops</h4>
+      <table>
+        <tr><th>wrapper</th><th>fires when</th><th>prints</th></tr>
+        <tr><td class="mono">operation_ss</td><td>A swap <b>or</b> B swap changed</td><td class="mono">ss once</td></tr>
+        <tr><td class="mono">operation_rr</td><td>A rotate <b>or</b> B rotate changed</td><td class="mono">rr once</td></tr>
+        <tr><td class="mono">operation_rrr</td><td>A reverse <b>or</b> B reverse changed</td><td class="mono">rrr once</td></tr>
+      </table>
+      <div class="note">Empty or single-element stacks silently return <code>STACK_UNCHANGED</code>, so invalid no-op instructions are never emitted — matching the subject's "operation on empty stack does nothing" rule.</div>
+    </div>
+  </div>
+</section>
+
+<section class="card" id="parse">
+  <div class="crumb">06 · input validation</div>
+  <h2>Parsing: options first, integers second</h2>
+  <p class="lead">Two independent parsers: <code>parse_options</code> consumes flags and collects plain strings; <code>parse_operands</code> splits those strings on spaces and validates every integer before it touches the stack.</p>
+  <svg class="fig" viewBox="0 0 980 150" role="img" aria-label="two-stage parsing">
+    <g font-family="system-ui,sans-serif" font-size="12">
+      <rect x="20" y="46" width="150" height="56" rx="8" fill="#fff" stroke="#586877"/><text x="95" y="70" text-anchor="middle" font-weight="600">argv tokens</text><text x="95" y="88" text-anchor="middle" font-size="11" fill="#586877">"-c"  "3 2"  "1"</text>
+      <line x1="170" y1="74" x2="214" y2="74" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="218" y="26" width="220" height="40" rx="8" fill="#f6efdc" stroke="#9a7416"/><text x="328" y="50" text-anchor="middle">parse_options → flags</text>
+      <rect x="218" y="80" width="220" height="40" rx="8" fill="#e4eef9" stroke="#2563a8"/><text x="328" y="104" text-anchor="middle">operands list (strings)</text>
+      <line x1="438" y1="100" x2="482" y2="100" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="486" y="70" width="200" height="60" rx="8" fill="#e4eef9" stroke="#2563a8"/><text x="586" y="92" text-anchor="middle" font-weight="600">parse_operands</text><text x="586" y="108" text-anchor="middle" font-size="11">count tokens → capacity</text><text x="586" y="123" text-anchor="middle" font-size="11">validate each integer</text>
+      <line x1="686" y1="100" x2="730" y2="100" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="734" y="70" width="220" height="60" rx="8" fill="#e0f1ef" stroke="#0e8a84"/><text x="844" y="92" text-anchor="middle" font-weight="600">stack a.data[size++]</text><text x="844" y="108" text-anchor="middle" font-size="11">head stays 0 during parse</text><text x="844" y="123" text-anchor="middle" font-size="11">duplicates rejected</text>
+    </g>
+  </svg>
+  <div class="grid2">
+    <div>
+      <h4>Overflow-safe integer parse (the key defense point)</h4>
+      <pre><span class="c">// inverse test before every multiply-add</span>
+<span class="k">if</span> (magnitude &gt; (limit - digit) / 10UL)
+    <span class="k">return</span> (-1);
+magnitude = magnitude * 10UL + digit;</pre>
+      <ul style="font-size:13.5px">
+        <li>Positive limit = <code>INT_MAX</code>; negative limit accepts exactly <code>-2147483648</code>.</li>
+        <li>A trailing non-digit (<code>12a</code>), a bare sign (<code>+</code>, <code>-</code>), and empty/whitespace-only tokens all fail.</li>
+        <li>Duplicate scan: linear search over <code>data[0..size)</code> before appending.</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Supported options (extras; subject core needs none)</h4>
+      <table>
+        <tr><th class="mono">short</th><th class="mono">long</th><th>effect</th></tr>
+        <tr><td class="mono">-s</td><td class="mono">--simple</td><td>force selection sort</td></tr>
+        <tr><td class="mono">-m</td><td class="mono">--medium</td><td>force chunk sort</td></tr>
+        <tr><td class="mono">-c</td><td class="mono">--complex</td><td>force turk sort</td></tr>
+        <tr><td class="mono">-b</td><td class="mono">--bench</td><td>report counters on stderr</td></tr>
+        <tr><td class="mono">--</td><td>—</td><td>end of options; rest are numbers</td></tr>
+      </table>
+      <h4>Failure → <code>Error\n</code> on stderr, exit 1</h4>
+      <p style="font-size:13px;color:var(--muted)">No args → silent exit 0; valid integers including both INT limits accepted; quoted strings with several numbers accepted, e.g. <code>"1 5 2" 4 "3"</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="card" id="orchestr">
+  <div class="crumb">07 · decision layer</div>
+  <h2>Disorder ratio and adaptive dispatch</h2>
+  <p class="lead">Before solving, the program counts inverted pairs. The ratio picks the solver; an explicit flag overrides; a sorted stack exits before any move.</p>
+  <div class="grid2">
+    <div>
+      <h4>Metric</h4>
+      <pre>disorder = inversions / C(n, 2)
+         = #{(i,j) : i&lt;j and a[i] &gt; a[j]} / (n(n-1)/2)</pre>
+      <p>Demo array <code>7 2 9 1 4 11 8 3 12 5 10 6</code> has <b>26 inversions</b> among <b>66 pairs</b> → <b>39.39%</b>. Real output: <code>[bench] disorder: 39.39%</code>.</p>
+      <table>
+        <tr><th>ratio</th><th>class</th><th>strategy</th></tr>
+        <tr><td class="mono">0.0</td><td>sorted; early exit</td><td>—</td></tr>
+        <tr><td class="mono">&lt; 0.2</td><td>almost sorted</td><td><span class="tag a">selection</span></td></tr>
+        <tr><td class="mono">0.2 – 0.5</td><td>medium scramble</td><td><span class="tag b">chunk</span></td></tr>
+        <tr><td class="mono">≥ 0.5</td><td>highly disordered</td><td><span class="tag r">turk</span></td></tr>
+      </table>
+    </div>
+    <div>
+      <h4>Dispatch code (<code>orchestrator_dispatch.c</code>)</h4>
+      <pre><span class="k">static</span> t_strategy select_adaptive_strategy(double disorder)
+{
+    <span class="k">if</span> (disorder &lt; 0.2)
+        <span class="k">return</span> (STRATEGY_SIMPLE);
+    <span class="k">if</span> (disorder &lt; 0.5)
+        <span class="k">return</span> (STRATEGY_MEDIUM);
+    <span class="k">return</span> (STRATEGY_COMPLEX);
+}</pre>
+      <div class="note">Logic in <code>dispatch_strategy</code>: explicit non-adaptive flag runs that solver (and records the ratio only under <code>-b</code>); otherwise the ratio chooses; every choice is recorded with <code>stats_set_selected_strategy</code>.</div>
+      <h4>Measured on the demo (39.39%)</h4>
+      <table>
+        <tr><th>mode</th><th>ops</th><th>checker</th></tr>
+        <tr><td class="mono">adaptive</td><td>41 (medium)</td><td>OK</td></tr>
+        <tr><td class="mono">-s simple</td><td>45</td><td>OK</td></tr>
+        <tr><td class="mono">-m medium</td><td>41</td><td>OK</td></tr>
+        <tr><td class="mono">-c complex</td><td>34</td><td>OK</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="card" id="small">
+  <div class="crumb">08a · solver 1</div>
+  <h2>Small sort engine (N ≤ 5)</h2>
+  <p class="lead">Used directly by selection sort and as the tail of every large solver. Guarantees the subject's tight budgets: ≤ 2 moves for 3, ≤ 12 for 5.</p>
+  <div class="grid2">
+    <div>
+      <h4>sort_two</h4>
+      <p>Top &gt; second → one <code>sa</code>; otherwise nothing.</p>
+      <h4>sort_three — place the maximum at the bottom, then fix the top pair</h4>
+      <table>
+        <tr><th>max offset</th><th>first move</th><th>then</th></tr>
+        <tr><td class="mono">0 (top)</td><td class="mono">ra</td><td rowspan="3">if top &gt; second → <span class="mono">sa</span></td></tr>
+        <tr><td class="mono">1 (middle)</td><td class="mono">rra</td></tr>
+        <tr><td class="mono">2 (bottom)</td><td>already correct</td></tr>
+      </table>
+      <h4>sort_five</h4>
+      <p>While A has more than 3: rotate the minimum to top via the shortest path, <code>pb</code>. Then <code>sort_three</code>; then <code>pa</code> everything back.</p>
+    </div>
+    <div>
+      <h4>Measured real stdout</h4>
+      <pre>$ ./push_swap 3 2 1
+ra
+sa
+
+$ ./push_swap 5 4 3 2 1
+rra
+pb
+rra
+pb
+ra
+sa
+pa
+pa</pre>
+      <div class="note">Helpers used: <code>sorting_minimum_offset</code>, <code>sorting_maximum_offset</code>, <code>sorting_rotation_distance</code> (forward = offset, reverse = size − offset), <code>sorting_rotate_to_offset</code> (shortest path wins).</div>
+    </div>
+  </div>
+</section>
+
+<section class="card" id="selection">
+  <div class="crumb">08b · solver 2 · simple</div>
+  <h2>Selection sort — <span class="mono">O(n²)</span></h2>
+  <p class="lead">Repeatedly move the minimum of A to B; when A empties, push everything back. Best when almost sorted, or as the N ≤ 5 path.</p>
+  <svg class="fig" viewBox="0 0 980 120" role="img" aria-label="selection sort flow">
+    <g font-family="system-ui,sans-serif" font-size="12">
+      <rect x="20" y="38" width="200" height="44" rx="8" fill="#e4eef9" stroke="#2563a8"/><text x="120" y="58" text-anchor="middle" font-weight="600">find minimum offset in A</text><text x="120" y="74" text-anchor="middle" font-size="11" fill="#586877">scan all elements</text>
+      <line x1="220" y1="60" x2="262" y2="60" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="266" y="38" width="220" height="44" rx="8" fill="#e4eef9" stroke="#2563a8"/><text x="376" y="58" text-anchor="middle" font-weight="600">shortest-path rotate to top</text><text x="376" y="74" text-anchor="middle" font-size="11" fill="#586877">ra if offset ≤ size/2 else rra</text>
+      <line x1="486" y1="60" x2="528" y2="60" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="532" y="38" width="160" height="44" rx="8" fill="#e0f1ef" stroke="#0e8a84"/><text x="612" y="58" text-anchor="middle" font-weight="600">pb</text><text x="612" y="74" text-anchor="middle" font-size="11" fill="#586877">minimum leaves A</text>
+      <line x1="692" y1="60" x2="734" y2="60" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="738" y="20" width="222" height="40" rx="8" fill="#fff" stroke="#586877"/><text x="849" y="44" text-anchor="middle">repeat until A empty</text>
+      <rect x="738" y="70" width="222" height="40" rx="8" fill="#fff" stroke="#586877"/><text x="849" y="94" text-anchor="middle">pa until B empty → A ascending</text>
+    </g>
+  </svg>
+  <div class="bars">
+    <div class="barrow"><span>-s selection (measured)</span><div class="bar"><i style="width:100%"></i></div><b>45 ops</b></div>
+  </div>
+  <p style="font-size:13.5px">Demo breakdown: <code>pb 12, pa 12, ra 13, rra 8</code>. Rotations dominate because every minimum may sit far from the top; this is why the dispatcher reserves it for ratio &lt; 0.2.</p>
+</section>
+
+<section class="card" id="chunk">
+  <div class="crumb">08c · solver 3 · medium</div>
+  <h2>Chunk sort — rank, partition, restore <span class="mono">O(n√n)</span></h2>
+  <p class="lead">Values are compressed to ranks 0…n−1, split into √n-wide ranges, moved to B range by range, then pulled back in descending order.</p>
+  <h4>Step 1 — rank compression (in-place heapsort)</h4>
+  <table>
+    <tr><th>value</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></tr>
+    <tr><th>rank</th><td class="mono">0</td><td class="mono">1</td><td class="mono">2</td><td class="mono">3</td><td class="mono">4</td><td class="mono">5</td><td class="mono">6</td><td class="mono">7</td><td class="mono">8</td><td class="mono">9</td><td class="mono">10</td><td class="mono">11</td></tr>
+  </table>
+  <p>Ranks survive in <code>chunk_item { value, physical_index }</code>; originals are restored with <code>items[rank].value</code> at the end.</p>
+  <h4>Step 2 — width: smallest k with k² &gt; n; width = 2(k − 1)</h4>
+  <p style="font-size:13.5px">n = 12 → k = 4 (16 &gt; 12) → width = 6 → ranges <code>[0,6)</code> and <code>[6,12)</code>. For n = 100, width ≈ 20; n = 500, width ≈ 44.</p>
+  <h4>Step 3 — partition A → B</h4>
+  <ul style="font-size:13.5px">
+    <li>Scan A: a rank inside the current range is <code>pb</code>; otherwise <code>ra</code> to rotate onward.</li>
+    <li>If the rank is in the <b>lower half</b> of the range, issue <code>rb</code> right after <code>pb</code>, sinking it deep in B; upper-half ranks stay near B's top.</li>
+  </ul>
+  <h4>Step 4 — restore B → A: pop the maximum each time</h4>
+  <p>Descending pops leave A ascending; then ranks are swapped back to original values. Measured demo: <code>pb 12, pa 12, ra 6, rb 6, rrb 5 = 41 ops</code>.</p>
+  <div class="warn">Robustness note: if the rank-array allocation fails, <code>chunk_sort</code> falls back to <code>turk_sort</code> rather than aborting — a detail worth mentioning in defense.</div>
+</section>
+
+<section class="card" id="turk">
+  <div class="crumb">08d · solver 4 · complex</div>
+  <h2>Turk sort — cheapest move first (greedy)</h2>
+  <p class="lead">For every candidate element the program computes where it belongs and how many rotations both stacks need, chooses the global minimum, and executes shared rotations first.</p>
+  <div class="grid2">
+    <div>
+      <h4>Targets</h4>
+      <table>
+        <tr><th>direction</th><th>order kept in target</th><th>landing rule</th></tr>
+        <tr><td>A → B</td><td>B circular <b>descending</b></td><td>predecessor = largest value &lt; v; if none → above B's maximum</td></tr>
+        <tr><td>B → A</td><td>A circular <b>ascending</b></td><td>successor = smallest value &gt; v; if none → above A's minimum</td></tr>
+      </table>
+      <h4>Move record (<code>t_turk_move</code>)</h4>
+      <p style="font-size:13px">source index, target index, source/target rotation counts, total cost, direction flags, <code>source_is_a</code>.</p>
+    </div>
+    <div>
+      <h4>Four cost combinations</h4>
+      <table>
+        <tr><th>A direction</th><th>B direction</th><th>cost</th></tr>
+        <tr><td class="mono">ra</td><td class="mono">rb</td><td>max(src, tgt) — shared <span class="mono">rr</span></td></tr>
+        <tr><td class="mono">rra</td><td class="mono">rrb</td><td>max(src, tgt) — shared <span class="mono">rrr</span></td></tr>
+        <tr><td class="mono">ra</td><td class="mono">rrb</td><td>src + tgt — no sharing</td></tr>
+        <tr><td class="mono">rra</td><td class="mono">rb</td><td>src + tgt — no sharing</td></tr>
+      </table>
+      <div class="note">Worked mini-state: B = <code>8 5 3 1</code>, candidate 6 at A offset 2; predecessor 5 at B offset 1. Both forward → max(2,1) = 2; both reverse → max(3,3) = 3; mixed → 5 or 4. Cheapest: two forward rotations, then push.</div>
+    </div>
+  </div>
+  <h4>Execution order inside <code>turk_execute_move</code></h4>
+  <div class="bars">
+    <div class="barrow"><span>1 · shared <span class="mono">rr</span> / <span class="mono">rrr</span></span><div class="bar"><i class="g" style="width:100%"></i></div><span></span></div>
+    <div class="barrow"><span>2 · leftover source rotations</span><div class="bar"><i style="width:72%"></i></div><span></span></div>
+    <div class="barrow"><span>3 · leftover target rotations</span><div class="bar"><i class="b" style="width:55%"></i></div><span></span></div>
+    <div class="barrow"><span>4 · push (<span class="mono">pb</span> / <span class="mono">pa</span>)</span><div class="bar"><i class="r" style="width:38%"></i></div><span></span></div>
+  </div>
+  <h4>Main phases</h4>
+  <ol style="font-size:13.5px">
+    <li>While A &gt; 3: cheapest A→B move, executed and pushed.</li>
+    <li>Sort the last 3 in A with the minimal internal <code>sort_three</code>.</li>
+    <li>While B &gt; 0: cheapest B→A move with successor targets.</li>
+    <li>Rotate A so its minimum sits at offset 0 (<code>turk_rotate_minimum_to_top</code>).</li>
+  </ol>
+  <p style="font-size:13.5px">Measured demo: <code>pb 9, pa 9, sa 1, ra 3, rb 3, rra 5, rrb 3, rrr 1 = 34 ops</code>. On N = 100 runs, shared rotations reach ≈ 68 <code>rr</code> + 50 <code>rrr</code> per permutation — the main source of Turk's low move count.</p>
+</section>
+
+<section class="card" id="evidence">
+  <div class="crumb">09 · measured data</div>
+  <h2>Benchmarks and evidence (compiled from this repository)</h2>
+  <h3>12-element demo — strategies side by side</h3>
+  <div class="bars">
+    <div class="barrow"><span>turk (-c)</span><div class="bar"><i class="r" style="width:75.6%"></i></div><b>34</b></div>
+    <div class="barrow"><span>adaptive / chunk (-m)</span><div class="bar"><i class="b" style="width:91.1%"></i></div><b>41</b></div>
+    <div class="barrow"><span>selection (-s)</span><div class="bar"><i style="width:100%"></i></div><b>45</b></div>
+  </div>
+  <h3>Large random permutations (shuf, five / three runs)</h3>
+  <table>
+    <tr><th>size</th><th>observed ops</th><th>checker</th><th>note</th></tr>
+    <tr><td class="mono">100</td><td class="mono">542, 549, 571, 648, 652</td><td>all OK</td><td>inside the ≲ 700 full-score band</td></tr>
+    <tr><td class="mono">500</td><td class="mono">5191, 5745, 5756</td><td>all OK</td><td>within the ≲ 8500 pass band; near the ≲ 5500 full-score band</td></tr>
+  </table>
+  <h3>Sample benchmark report (<code>-b</code>, goes to stderr; stdout stays clean)</h3>
+  <pre>[bench] disorder: 57.68%
+[bench] strategy: adaptive -&gt; complex / O(n log n)
+[bench] total ops: 591
+[bench] sa: 1   sb: 0   ss: 0
+[bench] pa: 97  pb: 97
+[bench] ra: 98  rb: 59  rr: 68
+[bench] rra: 34 rrb: 87  rrr: 50</pre>
+  <h3>Edge cases (observed)</h3>
+  <table>
+    <tr><th>input</th><th>behavior</th></tr>
+    <tr><td class="mono">(no args)</td><td>silent, exit 0</td></tr>
+    <tr><td class="mono">1 2 3 4 5</td><td>silent, exit 0 (already sorted)</td></tr>
+    <tr><td class="mono">1 2 3 2</td><td><code>Error\n</code> stderr, exit 1 (duplicate)</td></tr>
+    <tr><td class="mono">2147483648 / -2147483649</td><td><code>Error\n</code>, exit 1</td></tr>
+    <tr><td class="mono">2147483647 -2147483648</td><td>sorts correctly (valid INT limits)</td></tr>
+    <tr><td class="mono">"3 2 1"</td><td>sorts correctly from one quoted token</td></tr>
+  </table>
+</section>
+
+<section class="card" id="checker">
+  <div class="crumb">10 · bonus</div>
+  <h2>Checker bonus program</h2>
+  <p class="lead">A second binary built with <code>make bonus</code>. It reuses parsing and stack primitives; it reads instructions from stdin and reports <code>OK</code> / <code>KO</code>, never emitting moves of its own.</p>
+  <svg class="fig" viewBox="0 0 980 130" role="img" aria-label="checker flow">
+    <g font-family="system-ui,sans-serif" font-size="12">
+      <rect x="20" y="44" width="170" height="44" rx="8" fill="#e4eef9" stroke="#2563a8"/><text x="105" y="64" text-anchor="middle" font-weight="600">main_bonus</text><text x="105" y="80" text-anchor="middle" font-size="11" fill="#586877">same operand parser</text>
+      <line x1="190" y1="66" x2="232" y2="66" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="236" y="44" width="200" height="44" rx="8" fill="#f6efdc" stroke="#9a7416"/><text x="336" y="64" text-anchor="middle" font-weight="600">get_next_line loop</text><text x="336" y="80" text-anchor="middle" font-size="11" fill="#586877">process_instructions</text>
+      <line x1="436" y1="66" x2="478" y2="66" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="482" y="30" width="200" height="34" rx="8" fill="#e0f1ef" stroke="#0e8a84"/><text x="582" y="51" text-anchor="middle">dispatch by first char</text>
+      <rect x="482" y="74" width="200" height="34" rx="8" fill="#fff" stroke="#586877"/><text x="582" y="95" text-anchor="middle">primitives only (no print)</text>
+      <line x1="682" y1="66" x2="724" y2="66" stroke="#586877" marker-end="url(#ar)"/>
+      <rect x="728" y="30" width="232" height="34" rx="8" fill="#e0f1ef" stroke="#0e8a84"/><text x="844" y="51" text-anchor="middle">sorted(A) and B empty → OK</text>
+      <rect x="728" y="74" width="232" height="34" rx="8" fill="#f8e9e1" stroke="#b4552a"/><text x="844" y="95" text-anchor="middle">else KO · bad line → Error exit 1</text>
+    </g>
+  </svg>
+  <table>
+    <tr><th>dispatch branch</th><th>handles</th><th>executors</th></tr>
+    <tr><td class="mono">line[0] == 's'</td><td class="mono">sa sb ss</td><td class="mono">execute_swap</td></tr>
+    <tr><td class="mono">line[0] == 'p'</td><td class="mono">pa pb</td><td class="mono">execute_push → transfer_top</td></tr>
+    <tr><td class="mono">line[0]=='r' && line[1]=='r' && line[2]</td><td class="mono">rra rrb rrr</td><td class="mono">execute_reverse_rotate</td></tr>
+    <tr><td class="mono">line[0] == 'r'</td><td class="mono">ra rb rr</td><td class="mono">execute_rotate</td></tr>
+  </table>
+  <div class="note">Empty-stack push: <code>transfer_top</code> returns early on <code>STACK_UNCHANGED</code> — no crash, no print. On an invalid instruction the line is freed and GNL static buffers cleaned up before <code>Error\n</code>.</div>
+</section>
+
+<section class="card" id="makefile">
+  <div class="crumb">11 · build system</div>
+  <h2>Makefile walkthrough</h2>
+  <div class="grid2">
+    <div>
+      <table>
+        <tr><th>element</th><th>role</th></tr>
+        <tr><td class="mono">CC = cc · CFLAGS -Wall -Wextra -Werror</td><td>strict warnings as errors</td></tr>
+        <tr><td class="mono">DEPFLAGS = -MMD -MP</td><td>auto-generated header dependency files in <code>build/</code></td></tr>
+        <tr><td class="mono">libft.a (libft/)</td><td>built first; static archive linked into both binaries</td></tr>
+        <tr><td class="mono">common objects</td><td>stack, operations, parsing, stats, sorting core shared by both targets</td></tr>
+        <tr><td class="mono">push-specific objects</td><td>main, orchestrator, dispatch</td></tr>
+        <tr><td class="mono">checker objects</td><td>bonus main + four executor groups</td></tr>
+        <tr><td class="mono">.DELETE_ON_ERROR</td><td>partial object removed if a compile fails</td></tr>
+      </table>
+    </div>
+    <div>
+      <h4>Targets</h4>
+      <table>
+        <tr><th class="mono">make all</th><td>build <code>push_swap</code></td></tr>
+        <tr><th class="mono">make bonus</th><td>build <code>checker</code> (and common objects)</td></tr>
+        <tr><th class="mono">make clean</th><td>remove object + dependency files</td></tr>
+        <tr><th class="mono">make fclean</th><td>clean + remove both binaries and <code>libft.a</code></td></tr>
+        <tr><th class="mono">make re</th><td>fclean then all</td></tr>
+      </table>
+      <p style="font-size:13.5px">Object pattern: <code>src/%.c → build/%.o</code> with <code>CPPFLAGS</code> pointing at every include directory; colored <code>[CC]</code> / <code>[AR]</code> / <code>[LD]</code> tags mirror the teaching docs.</p>
+    </div>
+  </div>
+</section>
+
+<section class="card" id="functions">
+  <div class="crumb">12 · lookup</div>
+  <h2>Function index (collapsible)</h2>
+  <p class="lead">Full signatures, callers and callees are in <code>docs/function_reference.md</code>; this index maps every file to what it contributes.</p>
+  <details open><summary>main · orchestration (src/main.c, orchestrator*.c)</summary>
+    <table>
+      <tr><th>function</th><th>role</th></tr>
+      <tr><td class="mono">main</td><td>silent no-arg exit; parse; run; cleanup</td></tr>
+      <tr><td class="mono">parse_input (static)</td><td>options parser then operands parser</td></tr>
+      <tr><td class="mono">run_program (static)</td><td>init stats, orchestrator, optional benchmark print</td></tr>
+      <tr><td class="mono">orchestrator</td><td>exit early if sorted; else dispatch</td></tr>
+      <tr><td class="mono">dispatch_strategy</td><td>record ratio; honor explicit flag; choose adaptive; execute</td></tr>
+      <tr><td class="mono">select_adaptive_strategy (static)</td><td>thresholds 0.2 / 0.5</td></tr>
+      <tr><td class="mono">execute_strategy (static)</td><td>map enum to selection / chunk / turk</td></tr>
+    </table>
+  </details>
+  <details><summary>stack/ — ring buffer primitives</summary>
+    <table>
+      <tr><th>function</th><th>role</th></tr>
+      <tr><td class="mono">initialize_stacks / destroy_stacks</td><td>allocate / free both rings</td></tr>
+      <tr><td class="mono">stack_push_top / stack_pop_top</td><td>head-relative push and pop</td></tr>
+      <tr><td class="mono">stack_swap_top</td><td>exchange two logical tops</td></tr>
+      <tr><td class="mono">stack_rotate / stack_reverse_rotate</td><td>top↔bottom move, one value copied</td></tr>
+    </table>
+  </details>
+  <details><summary>operations/ — printed wrappers</summary>
+    <p class="mono" style="font-size:12.5px">operation_pa · operation_pb · operation_sa · operation_sb · operation_ss · operation_ra · operation_rb · operation_rr · operation_rra · operation_rrb · operation_rrr — each calls a primitive, prints on change, records a counter.</p>
+  </details>
+  <details><summary>parsing/options/</summary>
+    <table>
+      <tr><th>function</th><th>role</th></tr>
+      <tr><td class="mono">parse_options</td><td>initialize result and run scanner</td></tr>
+      <tr><td class="mono">scan_arguments / classify_argument / store_operand (static)</td><td>argv routing loop</td></tr>
+      <tr><td class="mono">parse_short_options / parse_long_option</td><td>flag grammar and registry lookup</td></tr>
+      <tr><td class="mono">apply_option / set_strategy (static)</td><td>set strategy or bench flag</td></tr>
+    </table>
+  </details>
+  <details><summary>parsing/operands/</summary>
+    <table>
+      <tr><th>function</th><th>role</th></tr>
+      <tr><td class="mono">parse_operands</td><td>count tokens, init stacks, parse tokens</td></tr>
+      <tr><td class="mono">parse_operand (static)</td><td>one string: integers, duplicates, append</td></tr>
+      <tr><td class="mono">parse_integer / parse_sign / parse_magnitude (static)</td><td>overflow-validated conversion</td></tr>
+      <tr><td class="mono">contains_value (static)</td><td>duplicate detection</td></tr>
+      <tr><td class="mono">count_operand_tokens</td><td>exact ring capacity</td></tr>
+    </table>
+  </details>
+  <details><summary>stats/</summary>
+    <p class="mono" style="font-size:12.5px">init_stats · record_operation · stats_set_selected_strategy · stats_set_disorder_ratio · print_benchmark (stderr report of 11 counters).</p>
+  </details>
+  <details><summary>sorting/utils/ + metrics</summary>
+    <table>
+      <tr><th>function</th><th>role</th></tr>
+      <tr><td class="mono">sorting_index_at / sorting_value_at</td><td>logical offset → physical slot</td></tr>
+      <tr><td class="mono">sorting_minimum_offset / sorting_maximum_offset</td><td>extreme value offset scan</td></tr>
+      <tr><td class="mono">sorting_rotation_distance</td><td>forward offset vs reverse size−offset</td></tr>
+      <tr><td class="mono">sorting_rotate_to_offset</td><td>shortest-path rotation wrapper</td></tr>
+      <tr><td class="mono">calculate_disorder_ratio / is_sorted</td><td>inversion density; ascending scan</td></tr>
+    </table>
+  </details>
+  <details><summary>sorting/small_sort/ · selection/</summary>
+    <p class="mono" style="font-size:12.5px">small_sort · sort_two · sort_three · sort_five (move_minimum_to_b static) · selection_sort (push minima to B, push back).</p>
+  </details>
+  <details><summary>sorting/chunk/</summary>
+    <p class="mono" style="font-size:12.5px">chunk_sort · chunk_rank_values · chunk_restore_values · sort_chunk_items · sift_chunk_heap · chunk_calculate_width · chunk_partition · chunk_process_range · chunk_push_back.</p>
+  </details>
+  <details><summary>sorting/turk/</summary>
+    <p class="mono" style="font-size:12.5px">turk_sort · turk_sort_small · turk_find_cheapest_move · turk_calculate_rotation_cost · turk_target_in_b (find_predecessor) · turk_target_in_a (find_successor) · turk_execute_move (rotate_shared / rotate_remaining_source / rotate_remaining_target / push_move) · turk_rotate_minimum_to_top.</p>
+  </details>
+  <details><summary>bonus/</summary>
+    <p class="mono" style="font-size:12.5px">main_bonus · process_instructions · execute_instruction · execute_push (transfer_top) · execute_swap · execute_rotate · execute_reverse_rotate.</p>
+  </details>
+</section>
+
+<section class="card" id="qa">
+  <div class="crumb">13 · rehearsal</div>
+  <h2>Defense Q&amp;A (condensed; full answers in docs/defense_qa.md)</h2>
+  <details><summary>Q1 · Why a circular array instead of linked nodes?</summary>
+    One allocation per ring; push/pop/rotate are index math modulo capacity; contiguous ints give cache locality; no per-node pointer overhead or repeated malloc/free.</details>
+  <details><summary>Q2 · How does rra work without shifting elements?</summary>
+    Read the bottom value, back <code>head</code> up modulo capacity, write that value at the new head; the old bottom becomes the top in O(1) with one value copy.</details>
+  <details><summary>Q3 · How is integer overflow prevented?</summary>
+    In <code>parse_magnitude</code> the inverse test <code>magnitude &gt; (limit − digit) / 10</code> runs before multiply-add; negative limit accepts exactly −2147483648.</details>
+  <details><summary>Q4 · What is the disorder ratio and where do thresholds sit?</summary>
+    Inversions / C(n,2). Below 0.2 selection; 0.2–0.5 chunk; ≥ 0.5 turk. Sorted input exits before any solver; explicit flags override selection; bench records the ratio regardless.</details>
+  <details><summary>Q5 · How does Turk choose a move?</summary>
+    Target predecessor in B (descending) or successor in A (ascending); evaluate four direction pairs: same direction shares rr/rrr at max cost, opposite directions cost the sum; global minimum executed with shared rotations first, leftovers second, push last.</details>
+  <details><summary>Q6 · Why ranks in chunk sort?</summary>
+    Raw ints span INT_MIN…INT_MAX; ranks 0…n−1 make range partitioning arithmetic and collision-free; originals are kept in item records and restored after sorting.</details>
+  <details><summary>Q7 · What does ss / rr / rrr guarantee?</summary>
+    One combined mnemonic printed when at least one side changes; checker executes both primitives; sharing cuts move count (≈118 shared rotations per N=100 Turk run in measured samples).</details>
+  <details><summary>Q8 · What happens on empty-stack pushes?</summary>
+    Pop returns STACK_UNCHANGED; wrapper prints nothing and records nothing; checker no-ops silently — matching subject semantics.</details>
+  <details><summary>Q9 · Memory safety walkthrough?</summary>
+    Two rings allocated in initialize_stacks; operand array in parser; chunk items calloc-freed on every path including the Turk fallback; destroy_stacks and destroy_parse_result run after solve; checker frees GNL buffers on error.</details>
+  <details><summary>Q10 · Weak points to preempt?</summary>
+    Selection is O(n²) (low-disorder use only); disorder scan reads data[] directly and relies on head = 0 pre-solve; chunk falls back to Turk on allocation failure; some N=500 random runs sit near 5500–5800 while staying under the 8500 pass band.</details>
+</section>
+
+<section class="card" id="rewrite">
+  <div class="crumb">14 · rebuild</div>
+  <h2>No-libft rewrite roadmap (six phases)</h2>
+  <p class="lead">A compilable teaching core ships in <code>reference_rewrite/</code>: <code>make</code> produces <code>psw_core</code>; chunk and Turk arrive as annotated stubs to study before writing.</p>
+  <table>
+    <tr><th>phase</th><th>deliverable</th><th>gate</th></tr>
+    <tr><td class="mono">1 · stack</td><td>ring buffer + five primitives</td><td>push/pop/rotate invariants hold on a unit driver</td></tr>
+    <tr><td class="mono">2 · operations</td><td>11 wrappers with write() + stats</td><td>mnemonic printed only on a real change</td></tr>
+    <tr><td class="mono">3 · parser</td><td>flags + overflow-safe ints + duplicates</td><td>invalid inputs exit 1; quoted tokens parse</td></tr>
+    <tr><td class="mono">4 · small + selection</td><td>lookups, small_sort, selection, ratio</td><td>3 2 1 → ra sa; sorted input silent</td></tr>
+    <tr><td class="mono">5 · chunk + turk</td><td>stubs annotated in reference_rewrite/src/sorting/</td><td>N=100 &lt; 700 ops; checker OK every run</td></tr>
+    <tr><td class="mono">6 · checker</td><td>GNL loop + dispatch + OK/KO/Error</td><td>bogus instruction → Error; unsorted → KO</td></tr>
+  </table>
+  <h3>libft → libc replacement (audited from this source)</h3>
+  <table>
+    <tr><th>real call</th><th>replacement</th><th>where</th></tr>
+    <tr><td class="mono">ft_printf("pb\n")</td><td class="mono">write(1, "pb\n", 3)</td><td>operation wrappers</td></tr>
+    <tr><td class="mono">ft_dprintf(2, "Error\n")</td><td class="mono">write(2, "Error\n", 6)</td><td>error exits, benchmark</td></tr>
+    <tr><td class="mono">ft_strcmp</td><td class="mono">strcmp (&lt;string.h&gt;)</td><td>options, checker dispatch</td></tr>
+    <tr><td class="mono">ft_isspace / ft_isdigit / ft_isalpha</td><td class="mono">isspace / isdigit / isalpha (&lt;ctype.h&gt;)</td><td>parser</td></tr>
+    <tr><td class="mono">ft_strlen</td><td class="mono">strlen</td><td>checker line trim</td></tr>
+    <tr><td class="mono">ft_calloc</td><td class="mono">calloc</td><td>chunk items array</td></tr>
+    <tr><td class="mono">get_next_line</td><td class="mono">local read_line()</td><td>checker only</td></tr>
+  </table>
+  <div class="note">Core layout shipped: <code>include/psw.h</code> · <code>src/stack/stack.c</code> · <code>src/operations/ops.c</code> · <code>src/parsing/parse.c</code> · <code>src/sorting/sort.c</code> · <code>src/core/main.c</code> · annotated <code>chunk_stub.c</code> / <code>turk_stub.c</code>.</div>
+</section>
+
+<section class="card" id="tests">
+  <div class="crumb">15 · verification</div>
+  <h2>Test checklist (copy-paste commands)</h2>
+  <pre># teaching core
+bash tests/run_tests.sh
+
+# full project
+make &amp;&amp; make bonus
+ARG="7 2 9 1 4 11 8 3 12 5 10 6"
+./push_swap $ARG | ./checker $ARG      # OK
+./push_swap -c $ARG | wc -l            # measured: 34
+./push_swap -b $ARG 2&gt;&amp;1 &gt;/dev/null    # benchmark on stderr
+./push_swap 1 2 3 2                     # Error, exit 1
+./push_swap 2147483648                  # Error, exit 1
+
+# performance
+for i in 1 2 3 4 5; do ARG=$(shuf -i 1-100 -n 100 | tr '\n' ' '); \
+  echo "$(./push_swap $ARG | ./checker $ARG) $(./push_swap $ARG | wc -l)"; done</pre>
+  <table>
+    <tr><th>case</th><th>stdout</th><th>stderr</th><th>exit</th></tr>
+    <tr><td class="mono">no args / already sorted / one number</td><td>empty</td><td>empty</td><td>0</td></tr>
+    <tr><td class="mono">valid permutation</td><td>instructions</td><td>empty (unless -b)</td><td>0</td></tr>
+    <tr><td class="mono">duplicate, overflow, non-digit, empty token</td><td>empty</td><td>Error\n</td><td>1</td></tr>
+    <tr><td class="mono">checker valid / invalid / bad instruction</td><td>OK / KO / —</td><td>— / — / Error\n</td><td>0 / 0 / 1</td></tr>
+  </table>
+</section>
+
+<p class="foot">push_swap mastery pack · generated from the actual source tree and measured runs · pair with docs/ and reference_rewrite/</p>
+</main>
+</div>
+<script>
+const links=[...document.querySelectorAll('nav.side a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+const obs=new IntersectionObserver(es=>{
+  es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+e.target.id));}});
+},{rootMargin:'-20% 0px -70% 0px'});
+secs.forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>
